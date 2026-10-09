@@ -752,9 +752,9 @@ audio_handle = [];
 
 % SET PPA DEVICE 
 aud_devs = PsychPortAudio('GetDevices'); 
-for i = 1:numel(aud_devs)
-    fprintf('Index: %d, Name: %s\n', aud_devs(i).DeviceIndex, aud_devs(i).DeviceName);
-end
+%for i = 1:numel(aud_devs)
+%    fprintf('Index: %d, Name: %s\n', aud_devs(i).DeviceIndex, aud_devs(i).DeviceName);
+%end
 aud_dev_names = {aud_devs.DeviceName}; 
 
 this_dev_idx = []; 
@@ -763,7 +763,7 @@ if isfield(setup_config, 'audio_device_keyword')
     fprintf('audio device keyword provided, will look for: %s\n', aud_dev_keyword); 
     this_dev_idx = find(contains(aud_dev_names, aud_dev_keyword));
     if ~isempty(this_dev_idx)
-        fprintf('Found audio device at index %d\n', this_dev_idx); 
+        fprintf('Found audio device at index %d\n', this_dev_idx-1); 
     else
         warning('Audio device: %s NOT FOUND! Reverting to system default audio device', aud_dev_keyword); 
     end
@@ -773,7 +773,6 @@ if isempty(this_dev_idx)
     %this_dev_idx = find(contains(aud_dev_names, 'default'));
     this_dev_idx = find(strcmp(aud_dev_names, 'default'));
 end
-
 
 %this_dev_idx = find(contains(aud_dev_names, 'Rubix22'));
 %this_dev_idx = find(contains(aud_dev_names, 'Steinberg'));
