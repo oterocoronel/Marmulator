@@ -31,25 +31,26 @@ screenid_ctrl = 0;
 
 
 
-% NOTE BELOW IS NOT USED - SCREEN SIZE ETC IS RETURNED IN ENGINE.M
-% SEE window_rect IN EXPT PARAMS FILE
-% IF window_rect = [] THEN WINDOW WILL BE FULL STIM SCREEN
+% Physical stimulus monitor geometry; window_rect=[] uses the full monitor.
 deviceBrand = ''; % e.g. 'ASUS'
-screenInches = []; % [27.7,15.5]; 
-screenPhysicalPixels = [];  % e.g.  [1920, 1080]
-% screenPixels and screenScale are set in the Windows Setting 
-screenPixels = []; % % e.g. [1920, 1080], could be different from physical pixels
-screenScale = 100; % percentage 
-devicePixelRatio = 1; 
-%if ~isempty(devicePixelRatio) && isempty(screenPixels)
-%    viewportPPI = screenPhysicalPixels(1)/devicePixelRatio/(screenScale/100)/screenInches(1);
-%else
-%    viewportPPI = screenPixels(1)/(screenScale/100)/screenInches(1); 
-%end
-viewportPPI = [] % DEPRECATED
-dist_to_screen = 13 /2.54; %cm to inches 
-deg_to_inch_on_screen = tan(0.5*pi/180)*dist_to_screen*2; %inches
-deg_to_pixel_on_screen = deg_to_inch_on_screen * viewportPPI; 
+display_geometry.viewing_distance_cm = 30;
+display_geometry.diagonal_inches = 16;
+display_geometry.resolution_px = [2560 1600];
+display_geometry.size_cm = display_geometry.diagonal_inches * 2.54 * ...
+    display_geometry.resolution_px / norm(display_geometry.resolution_px);
+display_geometry.pixels_per_cm = display_geometry.resolution_px ./ display_geometry.size_cm;
+display_geometry.pixel_pitch_mm = 10 ./ display_geometry.pixels_per_cm;
+display_geometry.pixels_per_degree = 2 * display_geometry.viewing_distance_cm * ...
+    tand(0.5) * display_geometry.pixels_per_cm;
+screenInches = [display_geometry.size_cm/2.54, display_geometry.diagonal_inches];
+screenPhysicalPixels = display_geometry.resolution_px;
+screenPixels = screenPhysicalPixels;
+screenScale = 100;
+devicePixelRatio = 1;
+viewportPPI = screenPixels(1)/screenInches(1);
+dist_to_screen = display_geometry.viewing_distance_cm/2.54; % legacy field in inches
+deg_to_inch_on_screen = 2*tand(0.5)*dist_to_screen;
+deg_to_pixel_on_screen = display_geometry.pixels_per_degree(1);
 %%%%
 
 
@@ -68,7 +69,7 @@ save(setup_save_path, 'marmulator_base_dir', 'save_dir_local',...
     'setup_date', 'reward_types',...
     'deviceBrand','screenInches','screenPixels','screenPhysicalPixels','screenScale','viewportPPI','devicePixelRatio',...
     'dist_to_screen','deg_to_inch_on_screen','deg_to_pixel_on_screen', ...
-    'audio_device_keyword');  
+    'audio_device_keyword', 'display_geometry');
 
 fprintf('saved setup config to %s\n', setup_save_path); 
 

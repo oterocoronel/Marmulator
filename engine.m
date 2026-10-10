@@ -105,6 +105,7 @@ flash_rect_size = [50 80];
 
 %% SETUP: load settings
 s = load(expt_params);
+s = apply_experiment_geometry(s, setup_config);
 %ctrl_screen = true;
 ctrl_screen = true;
 multiflip = 0;
@@ -586,6 +587,13 @@ end
 %window_rect = [ 0   0 2000 864];
 %screenid_stim = 1;
 %[win, win_rect] = Screen('OpenWindow', screenid_stim, bg_col_val, window_rect);
+if isfield(s, 'geometry_units') && strcmp(s.geometry_units, 'degrees') && isempty(window_rect)
+    screen_rect = Screen('Rect', screenid_stim);
+    assert(isequal(screen_rect(3:4)-screen_rect(1:2), s.display_geometry.resolution_px), ...
+        'Marmulator:DisplayResolutionMismatch', ...
+        'The fullscreen stimulus window must match the configured %d x %d pixel display.', ...
+        s.display_geometry.resolution_px);
+end
 [win, win_rect] = PsychImaging('OpenWindow', screenid_stim, bg_col_val, window_rect); %RM
 %ctrl_rect_debug = [0 0 1650 1200];
 %shrink_factor = 0.5;
@@ -2561,6 +2569,9 @@ calib_settings.iti_random = iti_random;
 calib_settings.iti_frames = iti_frames;
 calib_settings.position_order = position_order;
 calib_settings.bg_col = bg_col_val;
+if isfield(s, 'display_geometry')
+    calib_settings.display_geometry = s.display_geometry;
+end
 calib_settings.stim_rect_size_x = stim_rect_size_x;
 calib_settings.stim_rect_size_y = stim_rect_size_y;
 calib_settings.stim_mode = stim_mode;
@@ -2680,6 +2691,9 @@ settings.time_save = datestr(now, 'yyyy-mm-dd_HH-MM-SS');
 settings.time_start = session_time;
 settings.run_time = GetSecs() - t_start_sec;
 settings.ifi_monitor = ifi;
+if isfield(s, 'display_geometry')
+    settings.display_geometry = s.display_geometry;
+end
 settings.screenScale = setup_config.screenScale; % DEPRECATED, NOT USED
 settings.screenPixels = setup_config.screenPixels; % DEPRECATED, NOT USED
 settings.screenPhysicalPixels = setup_config.screenPhysicalPixels; % DEPRECATED, NOT USED
@@ -3083,4 +3097,39 @@ else
     img_folder_idx = ones(1,length(img_fnames));
 end
 
+end
+
+function params = apply_experiment_geometry(params, setup_config)
+% Degree fields are authoritative; derive the pixel fields used by engine.
+% Legacy profiles without degree fields keep their existing pixel values.
+if isfield(setup_config, 'display_geometry')
+    geometry = setup_config.display_geometry;
+elseif isfield(params, 'display_geometry')
+    geometry = params.display_geometry;
+else
+    return
+end
+params.display_geometry = geometry;
+dimensions = {'calibration_win_len','calibration_win_ht', ...
+    'stim_rect_size_x','stim_rect_size_y', ...
+    'bounding_rect_size_x','bounding_rect_size_y', ...
+    'bounding_rect_size_stim_pre_dot_x','bounding_rect_size_stim_pre_dot_y', ...
+    'wake_up_stim_size_x','wake_up_stim_size_y', ...
+    'stim_pre_dot_sz','gaze_pt_sz','mvdot_sz','test_img_len','test_img_ht', ...
+    'test_bb_size_x','test_bb_size_y'};
+for k = 1:numel(dimensions)
+    degree_field = [dimensions{k} '_deg'];
+    if isfield(params, degree_field)
+        degrees = params.(degree_field);
+        validateattributes(degrees, {'numeric'}, {'scalar','real','finite','nonnegative','<',180});
+        assert(abs(2*degrees - round(2*degrees)) < 1e-9, ...
+            'Marmulator:InvalidDegreeSize', '%s must be a multiple of 0.5 degrees.', degree_field);
+        params.(dimensions{k}) = round(convertDegreesPix(degrees, ...
+            geometry.viewing_distance_cm, geometry.size_cm, geometry.resolution_px));
+    end
+end
+if isfield(params, 'manual_bounding_boxes_fraction')
+    params.manual_bounding_boxes = params.manual_bounding_boxes_fraction .* ...
+        [geometry.resolution_px geometry.resolution_px];
+end
 end

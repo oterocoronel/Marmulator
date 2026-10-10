@@ -4,3 +4,4 @@ setup_config.mat
 subject_logs/
 setup_marmulator.m
 *.asv
+*.md

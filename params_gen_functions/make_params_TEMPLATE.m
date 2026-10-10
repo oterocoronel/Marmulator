@@ -3,16 +3,27 @@ function make_params_TEMPLATE()
 %%%%% THIS IS INTENDED AS A COMPLETE TEMPLATE - MAKE A COPY OF THIS FILE TO
 %%%%% MAKE YOUR OWN PARAMETER GENERATION FUNCTIONS 
 
-save_params_name = 'rsvp_center_brad_smaller_stim_pre_dot_bbox'; % e.g. 'grid_3_3_foraging_yj_wrenches_camels_6deg'; 
-save_base = 'C:\MATLAB\Marmulator'; % e.g. 'C:\MATLAB\Marmulator'; 
+save_params_name = 'center_RSVP3_stim10x10deg_bb4x4deg';
+save_base = fileparts(fileparts(mfilename('fullpath')));
+expt_type = 'experiment';
+display_geometry.viewing_distance_cm = 30;
+display_geometry.diagonal_inches = 16;
+display_geometry.resolution_px = [2560 1600];
+display_geometry.size_cm = display_geometry.diagonal_inches * 2.54 * ...
+    display_geometry.resolution_px / norm(display_geometry.resolution_px);
+display_geometry.pixels_per_cm = display_geometry.resolution_px ./ display_geometry.size_cm;
+display_geometry.pixel_pitch_mm = 10 ./ display_geometry.pixels_per_cm;
+display_geometry.pixels_per_degree = 2 * display_geometry.viewing_distance_cm * ...
+    tand(0.5) * display_geometry.pixels_per_cm;
+geometry_units = 'degrees'; % Edit *_deg fields; pixel values are generated below.
 
 %% SETTINGS:
 % general
 window_rect = []; % empty to run fullscreen
 skip_sync_tests = 1;
 
-calibration_win_len = 200;
-calibration_win_ht = 200; 
+calibration_win_len_deg = 8;
+calibration_win_ht_deg = 8;
 
 n_pts_x = 1; % how many different x grid locations
 n_pts_y = 1; % how many different y grid locations 
@@ -22,15 +33,15 @@ inter_stim_interval = [1000 2000];
 iti_random = false;
 order = 'random'; % or 'sequential'
 bg_col = 'gray';
-stim_rect_size_x = 90; % now applies to moving dots, rects, images
-stim_rect_size_y = 90; %
+stim_rect_size_x_deg = 10; % moving dots, rectangles, images
+stim_rect_size_y_deg = 10; % Sizes must be multiples of 0.5 degrees.
 
 
 show_curr_bounding_box = true;
 show_all_bounding_boxes = true;
 
-bounding_rect_size_x = 100;
-bounding_rect_size_y =100;
+bounding_rect_size_x_deg = 4;
+bounding_rect_size_y_deg = 4;
 
 manual_bounding_boxes = []; % empty for automoatic OR e.g. [0, 0, 768, 432; 768,0,1536,432; 0,432,768,864; 768,432,1536,864];
 
@@ -64,7 +75,7 @@ movie_rate = 1; % speed of movie playback
 % moving dot parameters
 scale_fact_move = 10; % how quickly should dot move?
 scale_fact_size = 3; % how quickly should dot change size? 0 = no change
-mvdot_sz = 15;
+mvdot_sz_deg = 0.5;
 reverse_rate = 0.2; % how often (per frame) should the stim change direction in x, y, or size
 reverse_rate_sz = 0.2;
 
@@ -78,10 +89,10 @@ break_after = 300;
 stimulus_pre_dot = true;
 stimulus_pre_dot_disappear = true; 
 stimulus_pre_time = 500; %ms, does not apply if require_fix_tr_init
-stim_pre_dot_sz = 8;
+stim_pre_dot_sz_deg = 0.5;
 
-bounding_rect_size_stim_pre_dot_x = 50; 
-bounding_rect_size_stim_pre_dot_y = 50; 
+bounding_rect_size_stim_pre_dot_x_deg = 2;
+bounding_rect_size_stim_pre_dot_y_deg = 2;
 
 % require fixation for trial start
 require_fix_tr_init = true;
@@ -89,7 +100,7 @@ fixation_to_init = 400;
 time_out_trial_init_s = 10; 
 
 % offset in y
-gaze_center_adj_y = 116;
+gaze_center_adj_y = 0;
 gaze_center_adj_x = 0;
 apply_gaze_center_adj = true;
 
@@ -97,7 +108,7 @@ apply_gaze_center_adj = true;
 draw_gaze_pt = true;
 n_gaze_pts_draw = 1;
 dot_col = distinguishable_colors(1);
-gaze_pt_sz = 15;
+gaze_pt_sz_deg = 0.5;
 draw_retain_bb_pts = false; % draw and retain the points that land in the bounding box through the session
 
 % gaze point feedback % SOMEWHAT DEPRECATED
@@ -117,7 +128,7 @@ punish_sound_file = fullfile(save_base, 'trial_outcome_snds\incorrect.wav');
 
 
 % eyetracking
-eye_method = 'gaze_point'; % USE 'gaze_point' 'pupil', 'pupil-glint', 'gaze_point', 'gaze_point_corrected' 'rand' [for no eyetracker input]
+eye_method = 'pupil'; % 'pupil', 'rand', or GUI mouse-gaze mode
 n_frames_blink = 8; 
 
 % reward
@@ -133,13 +144,31 @@ wake_up_trials = true;
 wake_up_every = [4 8];
 wake_up_tr_dur = 6;
 wake_up_img_fold = fullfile(save_base, 'stim\naturalistic_scenes');
-wake_up_stim_size_x = 592;
-wake_up_stim_size_y = 444;
+wake_up_stim_size_x_deg = 24.5;
+wake_up_stim_size_y_deg = 18.5;
 
-%%% DO NOT MODIFY %%%% 
-save_params_here = fullfile(save_base, 'experiment_params'); 
-save_full = fullfile(save_params_here, save_params_name); 
-save(fullfile(save_params_here, save_params_name)); 
-fprintf('saved %s \n', save_params_name); 
-disp(save_full);  
+%%% DO NOT MODIFY %%%%
+% Cache pixel fields for existing analysis code. The engine derives them
+% again from the degree fields and current rig geometry at session startup.
+deg_to_pix = @(d) round(convertDegreesPix(d, display_geometry.viewing_distance_cm, ...
+    display_geometry.size_cm, display_geometry.resolution_px));
+calibration_win_len = deg_to_pix(calibration_win_len_deg);
+calibration_win_ht = deg_to_pix(calibration_win_ht_deg);
+stim_rect_size_x = deg_to_pix(stim_rect_size_x_deg);
+stim_rect_size_y = deg_to_pix(stim_rect_size_y_deg);
+bounding_rect_size_x = deg_to_pix(bounding_rect_size_x_deg);
+bounding_rect_size_y = deg_to_pix(bounding_rect_size_y_deg);
+bounding_rect_size_stim_pre_dot_x = deg_to_pix(bounding_rect_size_stim_pre_dot_x_deg);
+bounding_rect_size_stim_pre_dot_y = deg_to_pix(bounding_rect_size_stim_pre_dot_y_deg);
+stim_pre_dot_sz = deg_to_pix(stim_pre_dot_sz_deg);
+gaze_pt_sz = deg_to_pix(gaze_pt_sz_deg);
+mvdot_sz = deg_to_pix(mvdot_sz_deg);
+wake_up_stim_size_x = deg_to_pix(wake_up_stim_size_x_deg);
+wake_up_stim_size_y = deg_to_pix(wake_up_stim_size_y_deg);
+clear deg_to_pix;
+save_params_here = fullfile(save_base, 'experiment_params');
+save_full = fullfile(save_params_here, save_params_name);
+save(save_full);
+fprintf('saved %s \n', save_params_name);
+disp(save_full);
 
