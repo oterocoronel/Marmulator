@@ -145,6 +145,14 @@ set(handles.figure1, 'CloseRequestFcn', @cleanUpFun);
 
 set(handles.expt_params_edit, 'String', fullfile(handles.base_dir, 'experiment_params')); 
 
+% Keep the surround setting when switching experiment files.
+handles.black_surround_check = uicontrol(handles.figure1, ...
+    'Style', 'checkbox', 'Tag', 'black_surround_check', 'Units', 'characters', ...
+    'Position', [3.4 22.1 70 1.6], 'String', 'Black surround (+2.5 deg per side)', ...
+    'Value', 0, 'BackgroundColor', get(handles.figure1, 'Color'), ...
+    'TooltipString', ['Keep black outside all stimulus locations plus 2.5 degrees on each side. ' ...
+        'The photodiode stays visible. Applies to the next Run.']);
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -383,6 +391,8 @@ end
 punish_time_ms = str2double(get(handles.punish_time_edit, 'String'));
 training_notes_str = get(handles.notes_edit, 'String');
 
+black_surround = logical(get(handles.black_surround_check, 'Value'));
+
 set(handles.status_text, 'String', sprintf('Session: calib_%s_%s.mat', handles.subject, session_time));
 
 try
@@ -394,7 +404,7 @@ try
         handles.reward_vol/1e3, punish_time_ms , break_after, n_rsvp, ...
         handles.trigger_arduino, handles.lick_arduino, handles.reward_selected,...
         handles.setup_config, training_notes_str, img_seq, taskfilelist, ...
-        handles.eyetracker_obj, wait_for_2p_trig);
+        handles.eyetracker_obj, wait_for_2p_trig, black_surround);
 catch me
     disp(getReport(me, 'extended'))
     set(gcbo, 'Enable', 'on')

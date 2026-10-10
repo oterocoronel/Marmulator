@@ -3,5 +3,6 @@ trial_outcome_snds/*
 setup_config.mat
 subject_logs/
 setup_marmulator.m
+gui/pump_params.mat
 *.asv
 *.md

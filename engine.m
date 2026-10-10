@@ -4,7 +4,7 @@ function [eyetrack, calib, save_full] = engine(reward_pumphand, reward_arduino_p
     require_fix_tr_init, fixation_to_init, time_out_trial_init_s, ...
     reward_today_hand, reward_vol, punish_length_ms, rsvp_break_after_t, n_rsvp, ...
     trigger_arduino, lick_arduino, reward_type, setup_config, training_notes_str,...
-    img_seq, taskfilelist, eyetracker, wait_for_2p_trig)
+    img_seq, taskfilelist, eyetracker, wait_for_2p_trig, black_surround)
 
 profile_memory = false; % flag for tracking memory usage
 
@@ -106,6 +106,26 @@ flash_rect_size = [50 80];
 %% SETUP: load settings
 s = load(expt_params);
 s = apply_experiment_geometry(s, setup_config);
+surround_margin_deg = 2.5; % 5 extra degrees in total along each axis
+% The GUI checkbox controls the surround with a fixed margin. Older direct
+% callers without this argument retain the experiment-file settings.
+if nargin < 30 || isempty(black_surround)
+    black_surround = isfield(s, 'black_surround') && s.black_surround;
+    if isfield(s, 'surround_margin_deg')
+        surround_margin_deg = s.surround_margin_deg;
+    end
+end
+surround_rect = [];
+surround_mask_rects = [];
+surround_mask_rects_ctrl = [];
+if black_surround
+    assert(isfield(s, 'display_geometry'), 'Marmulator:MissingDisplayGeometry', ...
+        'Black surround requires physical display geometry in the rig or experiment file.');
+    assert(isempty(s.window_rect), 'Marmulator:SurroundRequiresFullscreen', ...
+        'Use window_rect=[] so the black surround covers the entire stimulus monitor.');
+    assert(~any(strcmp(s.stim_mode, {'spinning','smooth pursuit','smooth_pursuit'})), ...
+        'Marmulator:UnsupportedSurroundMode', 'Black surround requires fixed stimulus locations.');
+end
 %ctrl_screen = true;
 ctrl_screen = true;
 multiflip = 0;
@@ -348,6 +368,9 @@ eye_rect = [0 0 320 320]; % updated for irechs2
 
 good_pts = [];
 good_pts_cols = [];
+operator_gaze_coords = [];
+operator_gaze_colors = [];
+operator_lick_color = [];
 
 if strcmp(eye_method, 'rand') | strcmp(eye_method, 'mouse')
     use_eyetracker = false;
@@ -587,14 +610,16 @@ end
 %window_rect = [ 0   0 2000 864];
 %screenid_stim = 1;
 %[win, win_rect] = Screen('OpenWindow', screenid_stim, bg_col_val, window_rect);
-if isfield(s, 'geometry_units') && strcmp(s.geometry_units, 'degrees') && isempty(window_rect)
+if black_surround || (isfield(s, 'geometry_units') && strcmp(s.geometry_units, 'degrees') && isempty(window_rect))
     screen_rect = Screen('Rect', screenid_stim);
     assert(isequal(screen_rect(3:4)-screen_rect(1:2), s.display_geometry.resolution_px), ...
         'Marmulator:DisplayResolutionMismatch', ...
         'The fullscreen stimulus window must match the configured %d x %d pixel display.', ...
         s.display_geometry.resolution_px);
 end
-[win, win_rect] = PsychImaging('OpenWindow', screenid_stim, bg_col_val, window_rect); %RM
+opening_color = bg_col_val;
+if black_surround, opening_color = blackcol; end
+[win, win_rect] = PsychImaging('OpenWindow', screenid_stim, opening_color, window_rect); %RM
 %ctrl_rect_debug = [0 0 1650 1200];
 %shrink_factor = 0.5;
 shrink_factor = 0.5; % RJM
@@ -612,7 +637,7 @@ if ~isempty(lick_arduino)
     lick_rect = [ctrl_rect_debug(3)-90*shrink_factor, ctrl_rect_debug(4)-200, ctrl_rect_debug(3), ctrl_rect_debug(4)-200+90*shrink_factor];
 end
 %if ctrl_screen; [win_ctrl, win_rect_ctrl] = Screen('OpenWindow', screenid_ctrl, bg_col_val, ctrl_rect_debug); end
-if ctrl_screen; [win_ctrl, win_rect_ctrl] = PsychImaging('OpenWindow', screenid_ctrl, bg_col_val, ctrl_rect_debug); end % DEBUG
+if ctrl_screen; [win_ctrl, win_rect_ctrl] = PsychImaging('OpenWindow', screenid_ctrl, opening_color, ctrl_rect_debug); end % DEBUG
 %if ctrl_screen; [win_ctrl, win_rect_ctrl] = PsychImaging('OpenWindow', screenid_ctrl, bg_col_val, []); end
 
 
@@ -653,6 +678,90 @@ if m2s_mode
     end
 end
 
+
+%% SETUP: set up stimulus locations on screen
+
+calib_rect = [0 0 calibration_win_len, calibration_win_ht];
+calib_rect_cent = CenterRectOnPoint(calib_rect, x_cent, y_cent);
+
+% calculate x locs, y locs for stim
+if n_pts_x == 1
+    x_pts = round(mean([calib_rect_cent(1), calib_rect_cent(3)]));
+else
+    x_pts = round(linspace(calib_rect_cent(1), calib_rect_cent(3), n_pts_x));
+end
+
+if n_pts_y == 1
+    y_pts = round(mean([calib_rect_cent(2), calib_rect_cent(4)]));
+else
+    y_pts = round(linspace(calib_rect_cent(2), calib_rect_cent(4), n_pts_y));
+end
+
+[A,B] = meshgrid(x_pts,y_pts);
+c=cat(2,A',B');
+all_pts =reshape(c,[],2);
+n_calib_pts = size(all_pts, 1);
+
+% if add center and gridpoints don't always contain center points
+if isfield(s,'add_center')
+    if s.add_center == 1
+        if (find(all_pts(:,1) ==x_cent) ~= find(all_pts(:,2) == y_cent))
+            n_calib_pts = n_calib_pts + 1;
+            n_pts_x = n_pts_x + 1;
+            n_pts_y = n_pts_y + 1;
+            all_pts = [all_pts; x_cent,y_cent];
+        elseif (isempty(find(all_pts(:,1) == x_cent, 1)) && isempty(find(all_pts(:,2) == y_cent, 1)))
+            n_calib_pts = n_calib_pts + 1;
+            n_pts_x = n_pts_x + 1;
+            n_pts_y = n_pts_y + 1;
+            all_pts = [all_pts; x_cent,y_cent];
+        end
+    end
+end
+
+%% SETUP: fixed black surround for all stimulus locations
+if black_surround
+    max_stim_width = stim_rect_size_x;
+    max_stim_height = stim_rect_size_y;
+    if strcmp(stim_mode, 'images')
+        widths = repmat(stim_rect_size_x, size(ar));
+        heights = round(widths ./ ar);
+        if ~pulse_size
+            portrait = ar <= 1;
+            heights(portrait) = stim_rect_size_y;
+            widths(portrait) = round(stim_rect_size_y * ar(portrait));
+        end
+        % Keep at least the configured size; include larger rendered images.
+        max_stim_width = max([max_stim_width; widths(:)]);
+        max_stim_height = max([max_stim_height; heights(:)]);
+    elseif m2s_mode
+        max_stim_width = max(stim_rect_size_x, test_img_len);
+        max_stim_height = max([stim_rect_size_y; test_img_ht; ...
+            round(stim_rect_size_x ./ sample_ar(:))]);
+    end
+    stimulus_rects = [all_pts - [max_stim_width max_stim_height]/2, ...
+        all_pts + [max_stim_width max_stim_height]/2];
+    try
+        [surround_rect, surround_mask_rects] = calculate_black_surround( ...
+            stimulus_rects, win_rect, s.display_geometry, surround_margin_deg, flash_rect);
+    catch surround_error
+        Screen('Close', win);
+        if ctrl_screen, Screen('Close', win_ctrl); end
+        ShowCursor;
+        Priority(oldPriority);
+        rethrow(surround_error);
+    end
+    surround_mask_rects_ctrl = surround_mask_rects * shrink_factor;
+    % Establish the masked background before texture/movie preloading.
+    % The full fill also sets PTB's automatic clear color for idle frames.
+    Screen('FillRect', win, bg_col_val);
+    drawBlackSurround();
+    Screen('Flip', win);
+    if ctrl_screen
+        Screen('FillRect', win_ctrl, bg_col_val);
+        flipControlWindow([]);
+    end
+end
 
 %% TRIGGER: turn on session trigger
 if trig_flag
@@ -908,46 +1017,6 @@ if isfield(s,'wake_up_movie')
     moviePtr_wu = Screen('OpenMovie', win, fullfile(s.wake_up_movie, movienames{1}), [], 1, 64);
     Screen('PlayMovie', moviePtr_wu, movie_rate, 1);
     wu_movie_stim_rect = CenterRectOnPoint([0, 0, wake_up_stim_size_x, wake_up_stim_size_y], x_cent,y_cent);
-end
-
-%% SETUP: set up stimulus locations on screen
-
-calib_rect = [0 0 calibration_win_len, calibration_win_ht];
-calib_rect_cent = CenterRectOnPoint(calib_rect, x_cent, y_cent);
-
-% calculate x locs, y locs for stim
-if n_pts_x == 1
-    x_pts = round(mean([calib_rect_cent(1), calib_rect_cent(3)]));
-else
-    x_pts = round(linspace(calib_rect_cent(1), calib_rect_cent(3), n_pts_x));
-end
-
-if n_pts_y == 1
-    y_pts = round(mean([calib_rect_cent(2), calib_rect_cent(4)]));
-else
-    y_pts = round(linspace(calib_rect_cent(2), calib_rect_cent(4), n_pts_y));
-end
-
-[A,B] = meshgrid(x_pts,y_pts);
-c=cat(2,A',B');
-all_pts =reshape(c,[],2);
-n_calib_pts = size(all_pts, 1);
-
-% if add center and gridpoints don't always contain center points
-if isfield(s,'add_center')
-    if s.add_center == 1
-        if (find(all_pts(:,1) ==x_cent) ~= find(all_pts(:,2) == y_cent))
-            n_calib_pts = n_calib_pts + 1;
-            n_pts_x = n_pts_x + 1;
-            n_pts_y = n_pts_y + 1;
-            all_pts = [all_pts; x_cent,y_cent];
-        elseif (isempty(find(all_pts(:,1) == x_cent, 1)) && isempty(find(all_pts(:,2) == y_cent, 1)))
-            n_calib_pts = n_calib_pts + 1;
-            n_pts_x = n_pts_x + 1;
-            n_pts_y = n_pts_y + 1;
-            all_pts = [all_pts; x_cent,y_cent];
-        end
-    end
 end
 
 %% SETUP: spinning: DEPRECATED???
@@ -1392,6 +1461,7 @@ end
 
 Screen('FillRect', win, bg_col_val)
 seqidx = 0;
+drawBlackSurround();
 vbl = Screen('Flip', win);
 t_start_sec = GetSecs();
 
@@ -1465,11 +1535,12 @@ for i = 1:n_trs_tot
     checkLick();
     
     Screen('FillRect', win, bg_col_val)
+    drawBlackSurround();
     vbl = Screen('Flip', win);
     
     if ctrl_screen
         Screen('FillRect', win_ctrl, bg_col_val)
-        vbl2 = Screen('Flip', win_ctrl);
+        vbl2 = flipControlWindow(curr_bb);
     end
     
     for j = 1:iti_frames(i)
@@ -1482,8 +1553,9 @@ for i = 1:n_trs_tot
         end
         checkLick();
         
+        drawBlackSurround();
         vbl = Screen('Flip', win, vbl + halfifi, dontclear, dontsync, multiflip);
-        if ctrl_screen; vbl2 = Screen('Flip', win_ctrl, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
+        if ctrl_screen; vbl2 = flipControlWindow(curr_bb, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
         get_eyetracker_draw_dots();
     end
     
@@ -1539,8 +1611,9 @@ for i = 1:n_trs_tot
             [eyeposx_cur, eyeposy_cur] = get_eyetracker_draw_dots();
             drawBoundingBoxes(curr_bb_stim_pre_dot);
             
+            drawBlackSurround();
             vbl = Screen('Flip', win, vbl + halfifi, dontclear, dontsync, multiflip);
-            if ctrl_screen; vbl2 = Screen('Flip', win_ctrl, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
+            if ctrl_screen; vbl2 = flipControlWindow(curr_bb_stim_pre_dot, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
             
             if trig_flag && ~trial_trig_hi
                 IOPort('Write', trig_hand, trial_trig_cmd.on, 1);
@@ -1593,12 +1666,15 @@ for i = 1:n_trs_tot
                     
                     if ctrl_screen
                         Screen('DrawTexture', win_ctrl, movtex_wu, [],  wu_movie_stim_rect*shrink_factor);
-                        Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
-                            dotsz, rgba_cols(:,end), [], 1);
+                        if ~black_surround
+                            Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
+                                dotsz, rgba_cols(:,end), [], 1);
+                        end
                     end
                     Screen('DrawTexture', win, movtex_wu, [],  wu_movie_stim_rect)
+                    drawBlackSurround();
                     vbl = Screen('flip',win,vbl+halfifi,dontclear,dontsync,multiflip);
-                    if ctrl_screen; vbl2 = Screen('Flip', win_ctrl,vbl2+halfifi, dontclear2,dontsync2,multiflip2);end
+                    if ctrl_screen; vbl2 = flipControlWindow(curr_bb_stim_pre_dot, vbl2+halfifi, dontclear2,dontsync2,multiflip2);end
                 end
                 wake_up_movie = 0;
             end
@@ -1952,8 +2028,10 @@ for i = 1:n_trs_tot
                         %Screen('DrawDots', win, all_pts(seqidx,:), 5, blackcol, [], 1);
                         if ctrl_screen
                             Screen('FillRect', win_ctrl, rect_col, stim_rect*shrink_factor);
-                            Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
-                                dotsz, rgba_cols(:,end), [], 1);
+                            if ~black_surround
+                                Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
+                                    dotsz, rgba_cols(:,end), [], 1);
+                            end
                         end
                     case 'match_to_sample'
 
@@ -1987,7 +2065,7 @@ for i = 1:n_trs_tot
                 end
                 
                 
-                if ctrl_screen % draw eye position dots
+                if ctrl_screen && ~black_surround % masked frames draw gaze after the mask
                     Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
                         dotsz, rgba_cols(:,end), [], 1);
                     %fprintf('drawing eyes: %0.2f, %0.2f\n', [eyeposx_cur, eyeposy_cur]*shrink_factor)
@@ -2033,8 +2111,10 @@ for i = 1:n_trs_tot
                 
                 if ctrl_screen
                     Screen('DrawTexture', win_ctrl, wu_imgs_texture_ctrl(wu_img_idx), [], stim_rect*shrink_factor);
-                    Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
-                        dotsz, rgba_cols(:,end), [], 1);
+                    if ~black_surround
+                        Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
+                            dotsz, rgba_cols(:,end), [], 1);
+                    end
                 end
                 
             elseif inter_rsvp
@@ -2055,7 +2135,7 @@ for i = 1:n_trs_tot
                     end
                 end
                 
-                if ctrl_screen; Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
+                if ctrl_screen && ~black_surround; Screen('DrawDots', win_ctrl, [eyeposx_cur, eyeposy_cur]*shrink_factor,...
                         dotsz, rgba_cols(:,end), [], 1); end
                 inter_rsvp_fr_ctr = inter_rsvp_fr_ctr + 1;
                 
@@ -2137,8 +2217,9 @@ for i = 1:n_trs_tot
             
             %t2_frame = GetSecs();
             %%%%% STIMULUS FRAME FLIP
-            if ctrl_screen; vbl2 = Screen('Flip', win_ctrl, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
+            if ctrl_screen; vbl2 = flipControlWindow(curr_bb, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
             vbl_old = vbl; 
+            drawBlackSurround();
             vbl = Screen('Flip', win, vbl + halfifi,dontclear, dontsync, multiflip);
             %t_dur(stfridx) = t1_frame - t2_frame;
             %fprintf('time since last flip: %0.3f ms\n', (vbl-vbl_old)*1000); 
@@ -2284,8 +2365,9 @@ for i = 1:n_trs_tot
             if draw_retain_bb_pts
                 drawGoodEyePts(0);
             end
+            drawBlackSurround();
             vbl = Screen('Flip', win, vbl + halfifi, dontclear, dontsync, multiflip);
-            if ctrl_screen; vbl2 = Screen('Flip', win_ctrl, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
+            if ctrl_screen; vbl2 = flipControlWindow(curr_bb, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
             
             % if ending, note the time:
             %calib_end_t(i) = GetSecs()-t_start_sec;
@@ -2414,8 +2496,9 @@ for i = 1:n_trs_tot
                         end
                         checkLick();
                         
+                        drawBlackSurround();
                         vbl = Screen('Flip', win, vbl + halfifi, dontclear, dontsync, multiflip);
-                        if ctrl_screen; vbl2 = Screen('Flip', win_ctrl, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
+                        if ctrl_screen; vbl2 = flipControlWindow(curr_bb, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
                     end
                     %WaitSecs(wait_after_reward);
                     
@@ -2446,8 +2529,9 @@ for i = 1:n_trs_tot
                     if draw_retain_bb_pts
                         drawGoodEyePts(0);
                     end
+                    drawBlackSurround();
                     vbl = Screen('Flip', win, vbl + halfifi, dontclear, dontsync, multiflip);
-                    if ctrl_screen; vbl2 = Screen('Flip', win_ctrl, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
+                    if ctrl_screen; vbl2 = flipControlWindow(curr_bb, vbl2 + halfifi, dontclear2, dontsync2, multiflip2); end
                     %fprintf('pun frame %d of %d\n', p, n_pun_frames); 
                 end
                 
@@ -2493,8 +2577,9 @@ if ctrl_screen; Screen('FillRect', win_ctrl, bg_col_val); end
 
 
 for j = 1:round(median(iti_frames))*2 % RM - why? 
+    drawBlackSurround();
     vbl = Screen('Flip', win);
-    if ctrl_screen; vbl2 = Screen('Flip', win_ctrl); end
+    if ctrl_screen; vbl2 = flipControlWindow([]); end
 end
 
 t2 = GetSecs;
@@ -2569,6 +2654,9 @@ calib_settings.iti_random = iti_random;
 calib_settings.iti_frames = iti_frames;
 calib_settings.position_order = position_order;
 calib_settings.bg_col = bg_col_val;
+calib_settings.black_surround = black_surround;
+calib_settings.surround_margin_deg = surround_margin_deg;
+calib_settings.surround_rect = surround_rect;
 if isfield(s, 'display_geometry')
     calib_settings.display_geometry = s.display_geometry;
 end
@@ -2755,6 +2843,36 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
 %profile report
 
 %% SUPPORT FUNCTIONS: nested
+    function drawBlackSurround()
+        if black_surround && ~isempty(surround_mask_rects)
+            Screen('FillRect', win, blackcol, surround_mask_rects);
+        end
+    end
+
+    function flip_time = flipControlWindow(bounding_box, varargin)
+        if black_surround
+            if ~isempty(surround_mask_rects_ctrl)
+                Screen('FillRect', win_ctrl, blackcol, surround_mask_rects_ctrl);
+            end
+            % Operator overlays stay visible even outside the animal's aperture.
+            % Empty boxes are used for initialization and the final blank frame.
+            if ~isempty(bounding_box)
+                if draw_retain_bb_pts && ~isempty(good_pts)
+                    Screen('DrawDots', win_ctrl, good_pts*shrink_factor, dotsz-5, good_pts_cols, [], 1);
+                end
+                if draw_gaze_pt && ~isempty(operator_gaze_coords)
+                    Screen('DrawDots', win_ctrl, operator_gaze_coords*shrink_factor, ...
+                        dotsz, operator_gaze_colors, [], 1);
+                end
+                drawBoundingBoxes(bounding_box);
+                if ~isempty(operator_lick_color)
+                    Screen('FillRect', win_ctrl, operator_lick_color, lick_rect);
+                end
+            end
+        end
+        flip_time = Screen('Flip', win_ctrl, varargin{:});
+    end
+
     function [eyeposx_cur, eyeposy_cur, eye_data_qual] = get_eyetracker_draw_dots()
         switch eye_method
             % case 'pupil-glint'
@@ -2853,9 +2971,11 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
             draw_coords = ret_dots_in_rect(eyepos_x(draw_idx1:draw_idx2),eyepos_y(draw_idx1:draw_idx2),win_rect, eye_rect);
         end
         
-        if draw_gaze_pt && ctrl_screen
+        operator_gaze_coords = draw_coords;
+        operator_gaze_colors = rgba_cols(:,(end-min(idx_all, n_gaze_pts_draw)+1):end);
+        if draw_gaze_pt && ctrl_screen && ~black_surround
             Screen('DrawDots', win_ctrl, draw_coords*shrink_factor,...
-                dotsz, rgba_cols(:,(end-min(idx_all, n_gaze_pts_draw)+1):end), [], 1);
+                dotsz, operator_gaze_colors, [], 1);
         end
         eyeposx_cur = draw_coords(1,end);
         eyeposy_cur = draw_coords(2,end);
@@ -2951,7 +3071,7 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
                 good_pts_cols(:,end+1) = [cols(seqidx+1,:) 0.3]';
             end
         end
-        if ~isempty(good_pts) && ctrl_screen
+        if ~isempty(good_pts) && ctrl_screen && ~black_surround
             Screen('DrawDots', win_ctrl, good_pts*shrink_factor, dotsz-5, good_pts_cols, [], 1);
         end
     end
@@ -2965,9 +3085,12 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
             
             if ctrl_screen
                 if lick
-                    Screen('FillRect', win_ctrl, [0, 142, 204], lick_rect)
+                    operator_lick_color = [0, 142, 204];
                 else
-                    Screen('FillRect', win_ctrl, [30, 30, 30], lick_rect)
+                    operator_lick_color = [30, 30, 30];
+                end
+                if ~black_surround
+                    Screen('FillRect', win_ctrl, operator_lick_color, lick_rect);
                 end
             end
             
@@ -3131,5 +3254,61 @@ end
 if isfield(params, 'manual_bounding_boxes_fraction')
     params.manual_bounding_boxes = params.manual_bounding_boxes_fraction .* ...
         [geometry.resolution_px geometry.resolution_px];
+end
+end
+
+function [surround_rect, mask_rects] = calculate_black_surround(stimulus_rects, window_rect, geometry, margin_deg, photodiode_rect)
+% Enclose every stimulus edge, add the angular margin, and leave the
+% background window and the original photodiode rectangle unmasked.
+validateattributes(stimulus_rects, {'numeric'}, {'2d','ncols',4,'nonempty','real','finite'});
+validateattributes(window_rect, {'numeric'}, {'row','numel',4,'real','finite'});
+validateattributes(margin_deg, {'numeric'}, {'scalar','real','finite','nonnegative'});
+assert(all(stimulus_rects(:,3:4) > stimulus_rects(:,1:2), 'all'), ...
+    'Marmulator:InvalidStimulusRect', 'Stimulus rectangles must have positive width and height.');
+pixels_per_cm = geometry.resolution_px ./ geometry.size_cm;
+distance_cm = geometry.viewing_distance_cm;
+validateattributes(pixels_per_cm, {'numeric'}, {'row','numel',2,'real','finite','positive'});
+validateattributes(distance_cm, {'numeric'}, {'scalar','real','finite','positive'});
+
+center = (window_rect(1:2) + window_rect(3:4)) / 2;
+bounds = [min(stimulus_rects(:,1)), min(stimulus_rects(:,2)), ...
+    max(stimulus_rects(:,3)), max(stimulus_rects(:,4))];
+center_xyxy = [center center];
+scale_xyxy = distance_cm * [pixels_per_cm pixels_per_cm];
+edge_angles = atand((bounds - center_xyxy) ./ scale_xyxy) + margin_deg * [-1 -1 1 1];
+assert(all(abs(edge_angles) < 90), 'Marmulator:SurroundDoesNotFit', ...
+    'Stimulus positions plus the requested margin extend beyond the display.');
+surround_rect = center_xyxy + tand(edge_angles) .* scale_xyxy;
+% Round outward so the requested margin is never reduced by pixel rounding.
+surround_rect(1:2) = floor(surround_rect(1:2) + 1e-9);
+surround_rect(3:4) = ceil(surround_rect(3:4) - 1e-9);
+assert(all(surround_rect(1:2) >= window_rect(1:2)) && ...
+    all(surround_rect(3:4) <= window_rect(3:4)), ...
+    'Marmulator:SurroundDoesNotFit', ...
+    'Stimuli plus %.2f degrees per side do not fit. Reduce their size/grid or disable black_surround.', margin_deg);
+
+% Four bands cover the screen outside the fixed background window.
+bands = [window_rect(1:2), window_rect(3), surround_rect(2); ...
+    window_rect(1), surround_rect(4), window_rect(3:4); ...
+    window_rect(1), surround_rect(2), surround_rect(1), surround_rect(4); ...
+    surround_rect(3), surround_rect(2), window_rect(3), surround_rect(4)];
+mask_rects = zeros(4,0); % Screen('FillRect') takes one rectangle per column.
+for k = 1:size(bands,1)
+    rect = bands(k,:);
+    pieces = rect;
+    if ~isempty(photodiode_rect)
+        overlap = [max(rect(1:2), photodiode_rect(1:2)), ...
+            min(rect(3:4), photodiode_rect(3:4))];
+        if overlap(3) > overlap(1) && overlap(4) > overlap(2)
+            % Subtract the photodiode instead of redrawing it. Its existing
+            % flicker and its appearance between stimuli remain unchanged.
+            pieces = [rect(1:2), rect(3), overlap(2); ...
+                rect(1), overlap(4), rect(3:4); ...
+                rect(1), overlap(2), overlap(1), overlap(4); ...
+                overlap(3), overlap(2), rect(3), overlap(4)];
+        end
+    end
+    pieces = pieces(pieces(:,3) > pieces(:,1) & pieces(:,4) > pieces(:,2),:);
+    mask_rects = [mask_rects pieces']; %#ok<AGROW>
 end
 end

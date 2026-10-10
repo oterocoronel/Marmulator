@@ -135,7 +135,6 @@ n_frames_blink = 8;
 give_rewards = true;
 reward_thresh = 0.95; % 95% of quality codes should be 0 ('glint is good')
 reward_on_dur = 0.1; % this shouldn't matter given the pump program just runs on the rising edge
-reward_vol = 0.001; % just for logging purposes, again set by pump program and stored in non-vol mem
 ard_pin_rew = 10; % which pin has the reward signal?
 wait_after_reward = 4;
 
