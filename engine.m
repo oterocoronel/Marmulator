@@ -4,7 +4,15 @@ function [eyetrack, calib, save_full] = engine(reward_pumphand, reward_arduino_p
     require_fix_tr_init, fixation_to_init, time_out_trial_init_s, ...
     reward_today_hand, reward_vol, punish_length_ms, rsvp_break_after_t, n_rsvp, ...
     trigger_arduino, lick_arduino, reward_type, setup_config, training_notes_str,...
-    img_seq, taskfilelist, eyetracker, wait_for_2p_trig, black_surround)
+    img_seq, taskfilelist, eyetracker, wait_for_2p_trig, black_surround, session_config, session_reader)
+
+if nargin < 31, session_config = []; end
+if nargin < 32, session_reader = []; end
+session_mode = ~isempty(session_config) && session_config.enabled;
+session_player = [];
+if session_mode
+    session_trials = session_plan(session_config, trs_per_location);
+end
 
 profile_memory = false; % flag for tracking memory usage
 
@@ -24,6 +32,7 @@ KbName('UnifyKeyNames');
 
 newPriority = 1;
 oldPriority = Priority(newPriority);
+engine_cleanup = onCleanup(@()cleanup_engine_resources(oldPriority,trigger_arduino)); %#ok<NASGU>
 fprintf('PTB old priority: %d, new priority %d\n', oldPriority, newPriority);
 PsychJavaSwingCleanup;
 
@@ -105,19 +114,32 @@ flash_rect_size = [50 80];
 
 %% SETUP: load settings
 s = load(expt_params);
+if session_mode
+    % A session snapshot overrides the behavioral mode, not the experiment file.
+    s.stim_mode = 'session'; s.trial_mode = 'trial'; s.reward_on = 'location';
+    s.fixation_exp_mode = false; s.constant_bg_mode = false;
+    s.wake_up_trials = false; s.n_pts_x = 1; s.n_pts_y = 1; s.add_center = false;
+    s.manual_bounding_boxes = []; s.manual_bounding_boxes_stim_pre_dot = [];
+    n_rsvp = 1;
+    if require_fix_tr_init, s.stimulus_pre_dot = true; end
+end
 s = apply_experiment_geometry(s, setup_config);
-surround_margin_deg = 2.5; % 5 extra degrees in total along each axis
-% The GUI checkbox controls the surround with a fixed margin. Older direct
-% callers without this argument retain the experiment-file settings.
+surround_margin_deg = 2.5; % radial fade width
+surround_inner_diameter_deg = 15;
+surround_outer_diameter_deg = surround_inner_diameter_deg + 2*surround_margin_deg;
+surround_gamma = 2.2; % approximate display gamma, not a measured calibration
+% Older direct callers can still enable the surround in the experiment file.
 if nargin < 30 || isempty(black_surround)
     black_surround = isfield(s, 'black_surround') && s.black_surround;
-    if isfield(s, 'surround_margin_deg')
-        surround_margin_deg = s.surround_margin_deg;
-    end
 end
 surround_rect = [];
 surround_mask_rects = [];
-surround_mask_rects_ctrl = [];
+surround_texture_rects = [];
+surround_source_rects = [];
+surround_mask_image = [];
+surround_texture = [];
+surround_texture_ctrl = [];
+surround_background = [];
 if black_surround
     assert(isfield(s, 'display_geometry'), 'Marmulator:MissingDisplayGeometry', ...
         'Black surround requires physical display geometry in the rig or experiment file.');
@@ -719,31 +741,10 @@ if isfield(s,'add_center')
     end
 end
 
-%% SETUP: fixed black surround for all stimulus locations
+%% SETUP: circular surround, centered on the current stimulus
 if black_surround
-    max_stim_width = stim_rect_size_x;
-    max_stim_height = stim_rect_size_y;
-    if strcmp(stim_mode, 'images')
-        widths = repmat(stim_rect_size_x, size(ar));
-        heights = round(widths ./ ar);
-        if ~pulse_size
-            portrait = ar <= 1;
-            heights(portrait) = stim_rect_size_y;
-            widths(portrait) = round(stim_rect_size_y * ar(portrait));
-        end
-        % Keep at least the configured size; include larger rendered images.
-        max_stim_width = max([max_stim_width; widths(:)]);
-        max_stim_height = max([max_stim_height; heights(:)]);
-    elseif m2s_mode
-        max_stim_width = max(stim_rect_size_x, test_img_len);
-        max_stim_height = max([stim_rect_size_y; test_img_ht; ...
-            round(stim_rect_size_x ./ sample_ar(:))]);
-    end
-    stimulus_rects = [all_pts - [max_stim_width max_stim_height]/2, ...
-        all_pts + [max_stim_width max_stim_height]/2];
     try
-        [surround_rect, surround_mask_rects] = calculate_black_surround( ...
-            stimulus_rects, win_rect, s.display_geometry, surround_margin_deg, flash_rect);
+        updateBlackSurround([x_cent y_cent]);
     catch surround_error
         Screen('Close', win);
         if ctrl_screen, Screen('Close', win_ctrl); end
@@ -751,7 +752,6 @@ if black_surround
         Priority(oldPriority);
         rethrow(surround_error);
     end
-    surround_mask_rects_ctrl = surround_mask_rects * shrink_factor;
     % Establish the masked background before texture/movie preloading.
     % The full fill also sets PTB's automatic clear color for idle frames.
     Screen('FillRect', win, bg_col_val);
@@ -896,22 +896,33 @@ end
 
 % reward
 [aud_y, PPA_fs] = psychwavread(reward_sound_file);
+if session_mode
+    aud_y = resample_feedback(aud_y, PPA_fs, 96000);
+    PPA_fs = 96000;
+    if ~isempty(this_dev_idx), devnr = aud_devs(this_dev_idx(1)).DeviceIndex; end
+end
 [samplecount,ninchannels] = size(aud_y);
 aud_y = repmat(aud_y',2/ninchannels,1);
 suggestedLat = []; % PsychPortAudio('GetDevices') LowOutputLatency
 % ppa_handle = PsychPortAudio('Open', 0, [], 1, aud_fs,2, [],suggestedLat);
 
-ppa_handle = PsychPortAudio('Open', devnr, 1, 1, PPA_fs,[], [],suggestedLat);
+ppa_handle = PsychPortAudio('Open', devnr, 1, 1, PPA_fs,2, [],suggestedLat);
 
 audio_handle(1) = PsychPortAudio('CreateBuffer', ppa_handle, aud_y);
 % punish
-[aud_pun_y, ~] = psychwavread(punish_sound_file);
+[aud_pun_y, aud_pun_fs] = psychwavread(punish_sound_file);
+if session_mode, aud_pun_y = resample_feedback(aud_pun_y, aud_pun_fs, PPA_fs); end
 [samplecount,ninchannels] = size(aud_pun_y);
 aud_pun_y = repmat(aud_pun_y',2/ninchannels,1);
 audio_handle(2) = PsychPortAudio('CreateBuffer', ppa_handle, aud_pun_y);
 
 
-%% SETUP: movie mode 
+if session_mode
+    session_player = SessionStimulusPlayer(win, ppa_handle, PPA_fs);
+    player_cleanup = onCleanup(@()delete(session_player)); %#ok<NASGU>
+end
+
+%% SETUP: movie mode
 specialFlags = 2; % RJM was 2 
 if strcmp(stim_mode, 'movie')
 
@@ -1085,7 +1096,11 @@ if strcmp(stim_mode,'smooth pursuit')
 end
 
 %% SETUP: img sequence
-if strcmp(stim_mode, 'images') | strcmp(stim_mode, 'movie')
+if session_mode
+    n_trs_requested = numel(session_trials);
+    n_trs_curr = n_trs_requested;
+    img_seq = 1:n_trs_requested;
+elseif strcmp(stim_mode, 'images') || strcmp(stim_mode, 'movie')
     n_trs_requested = n_calib_pts*trs_per_location;
     if constant_bg_mode && ~strcmp(stim_mode, 'movie')
         n_reps = ceil(n_trs_requested*n_rsvp/sum(n_stim_per_folder));
@@ -1420,6 +1435,12 @@ end
 
 %% SETUP: initialize state vars and empty vectors for run
 
+session_effective_trials = cell(1,n_trs_tot);
+session_fixation_scores = nan(1,n_trs_tot);
+session_audio_start = nan(1,n_trs_tot);
+session_movie_pts = cell(1,n_trs_tot);
+session_skipped = false(1,n_trs_tot);
+surround_centers = nan(n_trs_tot,2);
 reward_trial = false(1,n_trs_tot); % for recording whether reward was administered
 correct_trial = false(1,n_trs_tot); % for recording whether a trial was correct - not necesssarily same as reward_trial if using stop_rewards_n_nolicks
 punish_trial = false(1,n_trs_tot); % whether a trial was punished
@@ -1467,6 +1488,52 @@ t_start_sec = GetSecs();
 
 for i = 1:n_trs_tot
     fprintf('trial %d\n', i);
+    if session_mode
+        drawnow; % GUI edits become effective at a trial boundary.
+        current_session_trial = session_trials(i);
+        if ~isempty(session_reader)
+            current_session_trial = session_reader(session_trials(i),session_trials(i).modality);
+        end
+        if isempty(current_session_trial)
+            session_skipped(i) = true;
+            continue
+        end
+        assert(isfield(s,'display_geometry'),'Marmulator:MissingDisplayGeometry', ...
+            'Session geometry requires calibrated display geometry.');
+        g = s.display_geometry;
+        degToPx = @(a) 2*g.viewing_distance_cm*tand(a/2).*g.pixels_per_cm;
+        stim_size_px = degToPx(current_session_trial.stim_size_deg);
+        fixation_size_px = degToPx(current_session_trial.fixation_size_deg);
+        center = [x_cent y_cent] + g.viewing_distance_cm* ...
+            tand(current_session_trial.offset_deg).*g.pixels_per_cm;
+        all_pts(1,:) = center;
+        stim_rect_size_x = stim_size_px(1); stim_rect_size_y = stim_size_px(2);
+        bounding_rects(1,:) = [center-fixation_size_px/2 center+fixation_size_px/2];
+        bounding_rects_stim_pre_dot(1,:) = bounding_rects(1,:);
+        presentation_time = current_session_trial.duration_s*1000;
+        stim_frames = max(1,round(current_session_trial.duration_s/ifi));
+        reward_thresh = current_session_trial.reward_fraction;
+        switch current_session_trial.background
+            case 'gray', bg_col_val = graycol;
+            case 'black', bg_col_val = blackcol;
+            case 'white', bg_col_val = whitecol;
+        end
+        current_session_trial.scheduled_duration_s = stim_frames*ifi;
+        current_session_trial.stim_rect_px = [center-stim_size_px/2 center+stim_size_px/2];
+        current_session_trial.fixation_rect_px = bounding_rects(1,:);
+        session_player.prepare(current_session_trial);
+        current_session_trial.visual_source_rect_px = session_player.sourceRect;
+        current_session_trial.visual_mean_foreground_size_px = [];
+        current_session_trial.visual_scale = [];
+        current_session_trial.visual_rect_px = [];
+        if ~isempty(session_player.sourceRect)
+            current_session_trial.visual_mean_foreground_size_px = session_player.normalizationSize;
+            current_session_trial.visual_scale = min(stim_size_px./session_player.normalizationSize);
+            visual_size_px = session_player.visualSize*current_session_trial.visual_scale;
+            current_session_trial.visual_rect_px = [center-visual_size_px/2 center+visual_size_px/2];
+        end
+        session_effective_trials{i} = current_session_trial;
+    end
 
     % set variables for each trial
     curr_tr = i;
@@ -1524,8 +1591,12 @@ for i = 1:n_trs_tot
         end
     end
     
+    if black_surround
+        updateBlackSurround([xcurr ycurr]);
+        surround_centers(i,:) = [xcurr ycurr];
+    end
     idx_all = idx_all +1;
-    
+
     %drawInfoText();
     drawBoundingBoxes();
     if draw_retain_bb_pts
@@ -1643,6 +1714,7 @@ for i = 1:n_trs_tot
                 end
             elseif any(find(kCode) == wake_up_movie_key) && isfield(s,'wake_up_movie')
                 wake_up_movie = 1;
+                if black_surround, updateBlackSurround([x_cent y_cent]); end
                 wu_mov_start_t(end+1) = GetSecs()-t_start_sec;
                 while wake_up_movie
                     disp('wake_up_movie is playing')
@@ -1677,6 +1749,7 @@ for i = 1:n_trs_tot
                     if ctrl_screen; vbl2 = flipControlWindow(curr_bb_stim_pre_dot, vbl2+halfifi, dontclear2,dontsync2,multiflip2);end
                 end
                 wake_up_movie = 0;
+                if black_surround, updateBlackSurround([xcurr ycurr]); end
             end
             
             if require_fix_tr_init && seqidx ~= 0
@@ -1732,6 +1805,7 @@ for i = 1:n_trs_tot
             [~, ~, kCode] = KbCheck();
             if kCode(esc_key)
                 fprintf('wait aborted by user\n');
+                exit_flag = true; trial_aborted(i) = true;
                 break
             end
             % if GetSecs() - t_wait_start > wait_2p_timeout_s
@@ -1855,6 +1929,12 @@ for i = 1:n_trs_tot
             if seqidx ~= 0  && ~inter_rsvp
                 %% RUN: STIM MODE SWITCH FOR DRAWING
                 switch stim_mode
+                    case 'session'
+                        if stfridx == 1
+                            session_player.start(vbl+ifi);
+                            image_displayed{i} = current_session_trial.id;
+                        end
+                        session_player.draw(win,win_ctrl,stim_rect,shrink_factor);
                     case 'audio'
 
                     case 'spinning'
@@ -2226,6 +2306,10 @@ for i = 1:n_trs_tot
             
             if stfridx == 1
                 calib_st_t(i) = vbl-t_start_sec;
+                if session_mode && trig_flag && ~trial_trig_hi
+                    IOPort('Write',trig_hand,trial_trig_cmd.on,1);
+                    trial_trig_hi = 1;
+                end
             end
             
             if n_rsvp>1 && rsvpfridx == 1 
@@ -2272,6 +2356,8 @@ for i = 1:n_trs_tot
         % check if we need to end
         if trial_init_timed_out(i)
             end_stim = 1;
+        elseif session_mode
+            end_stim = (vbl-t_start_sec-calib_st_t(i)+ifi) >= stim_frames*ifi-ifi*0.1;
         elseif strcmp(trial_mode, 'trial') || seqidx == 0
             if ~fix_exp_mode && seqidx ~= 0 && stfridx >= stim_frames % finished successfully
                 end_stim = 1;
@@ -2280,7 +2366,8 @@ for i = 1:n_trs_tot
             elseif seqidx == 0 && stfridx >= wake_up_stim_frames
                 end_stim = 1;
             %elseif strcmp(stim_mode, 'movie') && ~loop_movie && Screen('GetMovieTimeIndex', moviePtr(img_idx))>= movie_durations(img_idx)-0.001
-            elseif strcmp(stim_mode, 'movie') && ~loop_movie && stfridx >= movie_fr_cnt(img_idx)
+            elseif strcmp(stim_mode, 'movie') && ~loop_movie && ...
+                    (vbl-t_start_sec-calib_st_t(i)+ifi) >= movie_durations(img_idx)/max(abs(movie_rate),eps)
                 end_stim = 1; 
                 %sca
                 %keyboard
@@ -2371,7 +2458,15 @@ for i = 1:n_trs_tot
             
             % if ending, note the time:
             %calib_end_t(i) = GetSecs()-t_start_sec;
-            calib_end_t(i) = vbl - t_start_sec;         
+            calib_end_t(i) = vbl - t_start_sec;
+            if session_mode
+                session_fixation_scores(i) = session_fixation_fraction( ...
+                    frame_st_t,eye_in_bb_curr(1:numel(frame_st_t)),calib_end_t(i));
+                session_player.stop();
+                session_audio_start(i) = session_player.audioStart-t_start_sec;
+                session_movie_pts{i} = session_player.moviePTS;
+                correct_trial(i) = session_fixation_scores(i) >= reward_thresh;
+            end
             if n_rsvp>1
                 rsvp_end_t(rsvp_ctr, i) = vbl-t_start_sec;
             end
@@ -2386,7 +2481,9 @@ for i = 1:n_trs_tot
             end
             
             if give_rewards && ~skip_reward
-                if strcmp(trial_mode, 'trial') || seqidx == 0
+                if session_mode
+                    reward_this_trial = correct_trial(i);
+                elseif strcmp(trial_mode, 'trial') || seqidx == 0
                     if strcmp(reward_on, 'quality') || (seqidx == 0 && ~eye_method_mouse)
                         frac_good = sum(eye_data_qual_curr < 2)/numel(eye_data_qual_curr);
                     elseif strcmp(reward_on, 'location') || (seqidx == 0 && eye_method_mouse)
@@ -2544,6 +2641,13 @@ for i = 1:n_trs_tot
     end
 
 
+    if session_mode && trig_flag && trial_init_timed_out(i)
+        IOPort('Write',trig_hand,trial_trig_cmd.off,1);
+    end
+    if session_mode && trig_flag && sampleCommand_trig_hi && ~isempty(sampleCommand_trig_cmd)
+        IOPort('Write',trig_hand,sampleCommand_trig_cmd.off,1);
+        sampleCommand_trig_hi = 0;
+    end
     if seqidx == 0
         wu_idx = wu_idx + 1;
         if wu_idx > n_wu_imgs
@@ -2552,9 +2656,25 @@ for i = 1:n_trs_tot
     end
     
     if exit_flag
+        if session_mode
+            Screen('FillRect',win,bg_col_val);
+            if ctrl_screen, Screen('FillRect',win_ctrl,bg_col_val); end
+            drawBlackSurround();
+            calib_end_t(i) = Screen('Flip',win)-t_start_sec;
+            if ctrl_screen, flipControlWindow([]); end
+            session_player.stop();
+            session_audio_start(i) = session_player.audioStart-t_start_sec;
+            session_movie_pts{i} = session_player.moviePTS;
+            if ~isempty(frame_st_t)
+                session_fixation_scores(i) = session_fixation_fraction( ...
+                    frame_st_t,eye_in_bb_curr(1:numel(frame_st_t)),calib_end_t(i));
+            end
+            calib_frame_st_t{i} = frame_st_t;
+            calib_frame_clip_num{i} = frame_clip_num;
+        end
         break
     end
-    
+
     if profile_memory & ispc
         [u,m] = memory;
         mem_used(i) = u.MemUsedMATLAB;
@@ -2565,10 +2685,15 @@ for i = 1:n_trs_tot
         mem_used(i) = sum([allvars.bytes]);
     end
 
+    if session_mode, session_player.stop(); end
     calib_frame_st_t{i} = frame_st_t;
     calib_frame_clip_num{i} = frame_clip_num;
     if strcmp(stim_mode, 'movie')
         Screen('Close'); % RJM experimental
+        % Screen('Close') also releases the aperture textures. The next draw
+        % recreates them from the cached image, without recalculating the fade.
+        surround_texture = [];
+        surround_texture_ctrl = [];
     end
 end
 
@@ -2583,6 +2708,7 @@ for j = 1:round(median(iti_frames))*2 % RM - why?
 end
 
 t2 = GetSecs;
+if session_mode, session_player.stop(); end
 Screen('CloseAll');
 PsychPortAudio('Close');
 sca
@@ -2607,10 +2733,20 @@ if profile_memory
 end
 
 %% SAVE: gather data for save into structures
+if session_mode
+    calib.session_trials = session_effective_trials;
+    calib.fixation_fraction = session_fixation_scores;
+    calib.session_skipped = session_skipped;
+    calib.audio_start_t = session_audio_start;
+    calib.movie_pts = session_movie_pts;
+    calib_settings.session_config = session_config;
+end
 calib.n_pts_x = n_pts_x;
 calib.n_pts_y = n_pts_y;
 calib.trs_per_location = trs_per_location;
-if any(trial_aborted)
+if session_mode
+    calib.n_completed = sum(~isnan(calib_end_t) & ~trial_init_timed_out & ~trial_aborted & ~session_skipped);
+elseif any(trial_aborted)
     calib.n_completed = find(trial_aborted) - 1;
 else
     calib.n_completed = i;
@@ -2657,6 +2793,12 @@ calib_settings.bg_col = bg_col_val;
 calib_settings.black_surround = black_surround;
 calib_settings.surround_margin_deg = surround_margin_deg;
 calib_settings.surround_rect = surround_rect;
+calib_settings.surround_shape = 'circle';
+calib_settings.surround_fade = 'smootherstep';
+calib_settings.surround_inner_diameter_deg = surround_inner_diameter_deg;
+calib_settings.surround_outer_diameter_deg = surround_outer_diameter_deg;
+calib_settings.surround_gamma = surround_gamma;
+calib_settings.surround_centers = surround_centers;
 if isfield(s, 'display_geometry')
     calib_settings.display_geometry = s.display_geometry;
 end
@@ -2790,7 +2932,7 @@ settings.viewportPPI = setup_config.viewportPPI;
 settings.deviceBrand = setup_config.deviceBrand;
 settings.devicePixelRatio = setup_config.devicePixelRatio;
 
-reward.give_rewards = true;
+reward.give_rewards = give_rewards;
 reward.reward_type = reward_type;
 reward.n_rewards_given = sum(reward_trial);
 reward.reward_sequence = reward_trial;
@@ -2843,17 +2985,51 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
 %profile report
 
 %% SUPPORT FUNCTIONS: nested
+    function updateBlackSurround(center)
+        if isempty(surround_mask_image) || ~isequal(surround_background, bg_col_val)
+            if ~isempty(surround_texture), Screen('Close', surround_texture); end
+            if ~isempty(surround_texture_ctrl), Screen('Close', surround_texture_ctrl); end
+            surround_texture = [];
+            surround_texture_ctrl = [];
+            surround_mask_image = make_circular_surround(s.display_geometry, ...
+                surround_inner_diameter_deg, surround_outer_diameter_deg, ...
+                (bg_col_val-blackcol)/(whitecol-blackcol), surround_gamma);
+            surround_background = bg_col_val;
+        end
+        mask_size = [size(surround_mask_image,2) size(surround_mask_image,1)];
+        [surround_rect, surround_mask_rects, surround_texture_rects] = ...
+            calculate_black_surround(center, win_rect, mask_size, flash_rect);
+        surround_source_rects = surround_texture_rects - ...
+            surround_rect([1 2 1 2])';
+    end
+
+    function drawCircularSurround(target_window, scale, is_control)
+        % Upload once, reuse at different centers, and recreate after movie cleanup.
+        if isempty(surround_texture)
+            surround_texture = Screen('MakeTexture', win, surround_mask_image);
+            if ctrl_screen
+                surround_texture_ctrl = Screen('MakeTexture', win_ctrl, surround_mask_image);
+            end
+        end
+        if is_control, texture = surround_texture_ctrl; else, texture = surround_texture; end
+        if ~isempty(surround_mask_rects)
+            Screen('FillRect', target_window, blackcol, surround_mask_rects*scale);
+        end
+        if ~isempty(surround_texture_rects)
+            Screen('DrawTextures', target_window, texture, surround_source_rects, ...
+                surround_texture_rects*scale);
+        end
+    end
+
     function drawBlackSurround()
-        if black_surround && ~isempty(surround_mask_rects)
-            Screen('FillRect', win, blackcol, surround_mask_rects);
+        if black_surround
+            drawCircularSurround(win, 1, false);
         end
     end
 
     function flip_time = flipControlWindow(bounding_box, varargin)
         if black_surround
-            if ~isempty(surround_mask_rects_ctrl)
-                Screen('FillRect', win_ctrl, blackcol, surround_mask_rects_ctrl);
-            end
+            drawCircularSurround(win_ctrl, shrink_factor, true);
             % Operator overlays stay visible even outside the animal's aperture.
             % Empty boxes are used for initialization and the final blank frame.
             if ~isempty(bounding_box)
@@ -2869,6 +3045,11 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
                     Screen('FillRect', win_ctrl, operator_lick_color, lick_rect);
                 end
             end
+        end
+        if session_mode && ~isempty(bounding_box)
+            % Show the configured stimulus area after the surround/overlays.
+            Screen('FrameRect',win_ctrl,whitecol, ...
+                current_session_trial.stim_rect_px*shrink_factor,2);
         end
         flip_time = Screen('Flip', win_ctrl, varargin{:});
     end
@@ -3257,44 +3438,69 @@ if isfield(params, 'manual_bounding_boxes_fraction')
 end
 end
 
-function [surround_rect, mask_rects] = calculate_black_surround(stimulus_rects, window_rect, geometry, margin_deg, photodiode_rect)
-% Enclose every stimulus edge, add the angular margin, and leave the
-% background window and the original photodiode rectangle unmasked.
-validateattributes(stimulus_rects, {'numeric'}, {'2d','ncols',4,'nonempty','real','finite'});
-validateattributes(window_rect, {'numeric'}, {'row','numel',4,'real','finite'});
-validateattributes(margin_deg, {'numeric'}, {'scalar','real','finite','nonnegative'});
-assert(all(stimulus_rects(:,3:4) > stimulus_rects(:,1:2), 'all'), ...
-    'Marmulator:InvalidStimulusRect', 'Stimulus rectangles must have positive width and height.');
+function mask = make_circular_surround(geometry, inner_diameter_deg, outer_diameter_deg, background_level, gamma)
+% Transparent over the center, increasingly opaque black through the annulus.
+% Shape the fade in approximate CIE L* lightness using a nominal
+% display gamma. This is not a photometric calibration or an animal vision model.
+% Lightness definition: https://cie.co.at/eilv/159
 pixels_per_cm = geometry.resolution_px ./ geometry.size_cm;
 distance_cm = geometry.viewing_distance_cm;
 validateattributes(pixels_per_cm, {'numeric'}, {'row','numel',2,'real','finite','positive'});
 validateattributes(distance_cm, {'numeric'}, {'scalar','real','finite','positive'});
+inner_radius = inner_diameter_deg/2;
+outer_radius = outer_diameter_deg/2;
+radius_px = ceil(distance_cm*tand(outer_radius)*pixels_per_cm);
+[x,y] = meshgrid((0.5:2*radius_px(1)-0.5)-radius_px(1), ...
+    (0.5:2*radius_px(2)-0.5)-radius_px(2));
+radius_deg = atand(hypot(x/pixels_per_cm(1), y/pixels_per_cm(2))/distance_cm);
+fade = max(0,min(1,(outer_radius-radius_deg)/(outer_radius-inner_radius)));
+% Quintic sigmoid (smootherstep): zero slope and curvature at both ends,
+% so the fade joins the constant center and black exterior smoothly.
+fade = fade.^3 .* (10 - 15*fade + 6*fade.^2);
 
-center = (window_rect(1:2) + window_rect(3:4)) / 2;
-bounds = [min(stimulus_rects(:,1)), min(stimulus_rects(:,2)), ...
-    max(stimulus_rects(:,3)), max(stimulus_rects(:,4))];
-center_xyxy = [center center];
-scale_xyxy = distance_cm * [pixels_per_cm pixels_per_cm];
-edge_angles = atand((bounds - center_xyxy) ./ scale_xyxy) + margin_deg * [-1 -1 1 1];
-assert(all(abs(edge_angles) < 90), 'Marmulator:SurroundDoesNotFit', ...
-    'Stimulus positions plus the requested margin extend beyond the display.');
-surround_rect = center_xyxy + tand(edge_angles) .* scale_xyxy;
-% Round outward so the requested margin is never reduced by pixel rounding.
-surround_rect(1:2) = floor(surround_rect(1:2) + 1e-9);
-surround_rect(3:4) = ceil(surround_rect(3:4) - 1e-9);
+% Convert display code to relative luminance, fade L*, then convert back.
+background_level = max(background_level,eps);
+luminance = background_level^gamma;
+kappa = (29/3)^3;
+if luminance > (6/29)^3
+    lightness = 116*luminance^(1/3)-16;
+else
+    lightness = kappa*luminance;
+end
+lightness = lightness*fade;
+luminance = ((lightness+16)/116).^3;
+dark = lightness<=8;
+luminance(dark) = lightness(dark)/kappa;
+gain = max(0,min(1,luminance.^(1/gamma)/background_level));
+gain(radius_deg<=inner_radius) = 1;
+gain(radius_deg>=outer_radius) = 0;
+mask = zeros(2*radius_px(2),2*radius_px(1),4,'uint8');
+mask(:,:,4) = uint8(round(255*(1-gain)));
+end
+
+function [surround_rect, mask_rects, texture_rects] = calculate_black_surround(center, window_rect, mask_size, photodiode_rect)
+% Position the same aperture texture at the actual (already offset) stimulus.
+validateattributes(center, {'numeric'}, {'row','numel',2,'real','finite'});
+surround_rect = [center-mask_size/2 center+mask_size/2];
 assert(all(surround_rect(1:2) >= window_rect(1:2)) && ...
     all(surround_rect(3:4) <= window_rect(3:4)), ...
     'Marmulator:SurroundDoesNotFit', ...
-    'Stimuli plus %.2f degrees per side do not fit. Reduce their size/grid or disable black_surround.', margin_deg);
+    'The 20-degree circular surround does not fit at this stimulus position. Reduce the offset or disable black_surround.');
 
-% Four bands cover the screen outside the fixed background window.
+% Opaque bands cover everything beyond the texture's bounds. Crop both the
+% bands and texture around the photodiode, preserving its original pixels.
 bands = [window_rect(1:2), window_rect(3), surround_rect(2); ...
     window_rect(1), surround_rect(4), window_rect(3:4); ...
     window_rect(1), surround_rect(2), surround_rect(1), surround_rect(4); ...
     surround_rect(3), surround_rect(2), window_rect(3), surround_rect(4)];
-mask_rects = zeros(4,0); % Screen('FillRect') takes one rectangle per column.
-for k = 1:size(bands,1)
-    rect = bands(k,:);
+mask_rects = exclude_photodiode(bands,photodiode_rect);
+texture_rects = exclude_photodiode(surround_rect,photodiode_rect);
+end
+
+function rects = exclude_photodiode(input_rects, photodiode_rect)
+rects = zeros(4,0); % PTB takes one rectangle per column.
+for k = 1:size(input_rects,1)
+    rect = input_rects(k,:);
     pieces = rect;
     if ~isempty(photodiode_rect)
         overlap = [max(rect(1:2), photodiode_rect(1:2)), ...
@@ -3309,6 +3515,31 @@ for k = 1:size(bands,1)
         end
     end
     pieces = pieces(pieces(:,3) > pieces(:,1) & pieces(:,4) > pieces(:,2),:);
-    mask_rects = [mask_rects pieces']; %#ok<AGROW>
+    rects = [rects pieces']; %#ok<AGROW>
+end
+end
+
+function audio = resample_feedback(audio,oldFs,newFs)
+% Feedback clips need not share the stimulus WAV rate. No toolbox dependency.
+if oldFs == newFs, return; end
+n = max(1,round(size(audio,1)*newFs/oldFs));
+audio = interp1((0:size(audio,1)-1)'/oldFs,audio,(0:n-1)'/newFs,'linear',0);
+end
+
+function cleanup_engine_resources(oldPriority,trigger)
+% Use captured values: nested-workspace variables can be destroyed before guards.
+try, PsychPortAudio('Close'); catch, end
+try, Screen('CloseAll'); catch, end
+try, ShowCursor; catch, end
+try, Priority(oldPriority); catch, end
+if ~isempty(trigger)
+    try
+        [session,trial,stim,sample] = gen_trig_commands(trigger);
+        IOPort('Write',trigger.ahand,session.off,1);
+        IOPort('Write',trigger.ahand,trial.off,1);
+        IOPort('Write',trigger.ahand,stim.off,1);
+        if ~isempty(sample), IOPort('Write',trigger.ahand,sample.off,1); end
+    catch
+    end
 end
 end

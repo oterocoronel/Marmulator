@@ -6,3 +6,6 @@ setup_marmulator.m
 gui/pump_params.mat
 *.asv
 *.md
+
+# Keep the session setup and stimulus audit in version control.
+!STIMULUS_SESSIONS.md

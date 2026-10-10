@@ -19,3 +19,7 @@ Trials are presented in a timed manner without requiring fixation for either tri
 Relevant task variables: 
 
 
+
+## Flexible stimulus sessions
+
+Choose `flexible_stimuli_2p.mat` for folder-selected images, movies and sounds with shared geometry, separate chair/action timing rules, and fixation-percentage rewards. See [setup, formats and audit](STIMULUS_SESSIONS.md).

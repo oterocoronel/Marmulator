@@ -148,10 +148,12 @@ set(handles.expt_params_edit, 'String', fullfile(handles.base_dir, 'experiment_p
 % Keep the surround setting when switching experiment files.
 handles.black_surround_check = uicontrol(handles.figure1, ...
     'Style', 'checkbox', 'Tag', 'black_surround_check', 'Units', 'characters', ...
-    'Position', [3.4 22.1 70 1.6], 'String', 'Black surround (+2.5 deg per side)', ...
+    'Position', [3.4 22.1 70 1.6], 'String', 'Black surround (15 to 20 deg circle)', ...
     'Value', 0, 'BackgroundColor', get(handles.figure1, 'Color'), ...
-    'TooltipString', ['Keep black outside all stimulus locations plus 2.5 degrees on each side. ' ...
-        'The photodiode stays visible. Applies to the next Run.']);
+    'TooltipString', ['Keep the background unchanged within a 15-degree circle, fading to black by 20 degrees. ' ...
+        'The circle follows the stimulus location; the photodiode stays visible. Applies to the next Run.']);
+
+handles.session_panel = StimulusSessionPanel(handles.figure1, handles.black_surround_check);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -392,6 +394,19 @@ punish_time_ms = str2double(get(handles.punish_time_edit, 'String'));
 training_notes_str = get(handles.notes_edit, 'String');
 
 black_surround = logical(get(handles.black_surround_check, 'Value'));
+session_config = [];
+session_reader = [];
+if get(handles.session_panel.enableCheck,'Value')
+    try
+        session_config = handles.session_panel.snapshot(true);
+        session_plan(session_config,repeats_per_loc); % fail before opening hardware/display
+        session_reader = @(item,modality)handles.session_panel.currentTrial(item,modality);
+    catch me
+        set(handles.status_text,'String',me.message);
+        set(hObject,'Enable','on');
+        return
+    end
+end
 
 set(handles.status_text, 'String', sprintf('Session: calib_%s_%s.mat', handles.subject, session_time));
 
@@ -404,7 +419,7 @@ try
         handles.reward_vol/1e3, punish_time_ms , break_after, n_rsvp, ...
         handles.trigger_arduino, handles.lick_arduino, handles.reward_selected,...
         handles.setup_config, training_notes_str, img_seq, taskfilelist, ...
-        handles.eyetracker_obj, wait_for_2p_trig, black_surround);
+        handles.eyetracker_obj, wait_for_2p_trig, black_surround, session_config, session_reader);
 catch me
     disp(getReport(me, 'extended'))
     set(gcbo, 'Enable', 'on')
@@ -518,8 +533,8 @@ if ~isempty(taskgui_h)
     close(taskgui_h);
 end
 
-curridx = get(gcbo, 'Value');
-flist = get(gcbo, 'String');
+curridx = get(hObject, 'Value');
+flist = get(hObject, 'String');
 if curridx == 1
     handles.params_file = [];
     set(handles.hold_time_edit, 'String', '');
@@ -536,6 +551,16 @@ if curridx == 1
 else
     handles.params_file = fullfile(handles.expt_params_dir, flist{curridx});
     handles.params = load(handles.params_file);
+    if isfield(handles.params,'session_catalog')
+        root = fileparts(handles.params.session_catalog);
+        if isempty(handles.session_panel.config) || ~strcmp(handles.session_panel.config.root,root)
+            set(handles.session_panel.rootEdit,'String',root);
+            handles.session_panel.reload();
+        end
+        set(handles.session_panel.enableCheck,'Value',1);
+    else
+        set(handles.session_panel.enableCheck,'Value',0);
+    end
     handles.repeats_per_loc = handles.params.repeats_per_stim;
     handles.nr_pts_x_y = [handles.params.n_pts_x, handles.params.n_pts_y];
     handles.hold_time = handles.params.time_to_reward;
