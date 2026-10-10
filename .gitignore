@@ -4,6 +4,7 @@ setup_config.mat
 subject_logs/
 setup_marmulator.m
 gui/pump_params.mat
+/tests
 *.asv
 *.md
 

@@ -1,5 +1,7 @@
-function trials = session_plan(config, repeats)
+function trials = session_plan(config, repeats, randomize)
 % A randomized complete pass through every selected item/condition per repeat.
+% Ordered plans support estimates without changing the experiment's RNG state.
+if nargin<3, randomize=true; end
 validateattributes(repeats, {'numeric'}, {'scalar','integer','positive','finite'});
 trials = struct([]);
 for k = 1:numel(config.items)
@@ -16,6 +18,8 @@ assert(~isempty(trials), 'Marmulator:EmptySession', 'Select at least one nonempt
 base = trials;
 trials = struct([]);
 for k = 1:repeats
-    trials = [trials base(randperm(numel(base)))]; %#ok<AGROW>
+    order = 1:numel(base);
+    if randomize, order = randperm(numel(base)); end
+    trials = [trials base(order)]; %#ok<AGROW>
 end
 end

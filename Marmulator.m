@@ -153,7 +153,7 @@ handles.black_surround_check = uicontrol(handles.figure1, ...
     'TooltipString', ['Keep the background unchanged within a 15-degree circle, fading to black by 20 degrees. ' ...
         'The circle follows the stimulus location; the photodiode stays visible. Applies to the next Run.']);
 
-handles.session_panel = StimulusSessionPanel(handles.figure1, handles.black_surround_check);
+handles.session_panel = StimulusSessionPanel(handles.figure1, handles.black_surround_check, handles.repeats_edit);
 
 % Update handles structure
 guidata(hObject, handles);
@@ -600,6 +600,7 @@ else
     set(handles.trial_time_edit, 'String', sprintf('%d', handles.trial_time));
     set(handles.n_x_y_string, 'String', sprintf('[%d, %d]', handles.nr_pts_x_y(1), handles.nr_pts_x_y(2)));
     set(handles.repeats_edit, 'String', sprintf('%d', handles.repeats_per_loc));
+    handles.session_panel.updateEstimate();
     set(handles.hold_time_edit, 'String', sprintf('%d', handles.hold_time));
     set(handles.response_time_edit, 'String', sprintf('%d', handles.response_time));
     if (isfield(handles.params, 'n_rsvp') && handles.params.n_rsvp > 1) || (isfield(handles.params, 'fixation_exp_mode') && handles.params.fixation_exp_mode)
@@ -863,6 +864,7 @@ function repeats_edit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of repeats_edit as text
 %        str2double(get(hObject,'String')) returns contents of repeats_edit as a double
+if isfield(handles,'session_panel'), handles.session_panel.updateEstimate(); end
 
 
 % --- Executes during object creation, after setting all properties.

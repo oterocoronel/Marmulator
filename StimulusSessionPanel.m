@@ -12,10 +12,14 @@ classdef StimulusSessionPanel < handle
         actionsTimeEdit
         setsTable
         status
+        isiEdit
+        estimateText
+        repeatsEdit = []
         config = []
     end
     methods
-        function obj = StimulusSessionPanel(fig, blackCheck)
+        function obj = StimulusSessionPanel(fig, blackCheck, repeatsEdit)
+            if nargin>2, obj.repeatsEdit = repeatsEdit; end
             children = get(fig,'Children');
             for k = 1:numel(children), set(children(k),'Units','pixels'); end
             set(fig,'Units','pixels'); pos = get(fig,'Position'); oldWidth = pos(3);
@@ -75,14 +79,25 @@ classdef StimulusSessionPanel < handle
                 'String',{'All matching files in checked folders are used. A-only keeps a fixation marker.', ...
                 'Folder contents refresh at Run. Repeats = passes through the selected folders.'}, ...
                 'HorizontalAlignment','left');
-            obj.setsTable = uitable(p,'Units','normalized','Position',[.02 .085 .96 .38], ...
-                'ColumnName',{'Use','Set','Mode','Files','Folder','Timing'}, ...
-                'ColumnEditable',[true false true false false false], ...
-                'ColumnFormat',{'logical','char',{'AV','A','V','AV,A,V'},'numeric','char','char'}, ...
-                'ColumnWidth',{35 135 70 45 265 100},'RowName',[], ...
+            obj.setsTable = uitable(p,'Units','normalized','Position',[.02 .215 .96 .25], ...
+                'ColumnName',{'Use','Set','Mode','Files','Folder','Timing','Each (s)'}, ...
+                'ColumnEditable',[true false true false false false false], ...
+                'ColumnFormat',{'logical','char',{'AV','A','V','AV,A,V'},'numeric','char','char','char'}, ...
+                'ColumnWidth',{35 110 65 45 205 75 100},'RowName',[], ...
                 'CellEditCallback',@(~,e)obj.syncSets(e));
+            uicontrol(p,'Style','text','Units','normalized','Position',[.02 .17 .25 .035], ...
+                'String','Assumed ISI (s), estimate only','HorizontalAlignment','left');
+            obj.isiEdit = uicontrol(p,'Style','edit','Units','normalized', ...
+                'Position',[.28 .17 .1 .035],'String','0.5', ...
+                'TooltipString','Whole gap between stimuli, including waiting for center fixation and reward delays.', ...
+                'Callback',@(~,~)obj.validateISI());
+            uicontrol(p,'Style','text','Units','normalized','Position',[.4 .165 .58 .045], ...
+                'String','Includes gaps between stimuli; excludes initial wait and pauses.', ...
+                'HorizontalAlignment','left');
+            obj.estimateText = uicontrol(p,'Style','text','Units','normalized', ...
+                'Position',[.02 .045 .96 .115],'HorizontalAlignment','left');
             obj.status = uicontrol(p,'Style','text','Units','normalized', ...
-                'Position',[.02 .005 .96 .065],'HorizontalAlignment','left');
+                'Position',[.02 .005 .96 .035],'HorizontalAlignment','left');
             root = fullfile(getenv('HOME'),'Stimuli','stimuli_2p');
             set(obj.rootEdit,'String',root);
             if isfile(fullfile(root,'stimulus_catalog.json')), obj.reload(); end
@@ -110,18 +125,21 @@ classdef StimulusSessionPanel < handle
             set(obj.chairModePopup,'Value',1+strcmp(obj.config.chair_duration_mode,'cap'));
             set(obj.chairMaxEdit,'String',num2str(obj.config.chair_max_duration_s));
             set(obj.actionsTimeEdit,'String',num2str(obj.config.actions_duration_s));
-            obj.syncChair(); obj.renderSets();
+            if ~isfield(obj.config,'estimated_isi_s'), obj.config.estimated_isi_s=.5; end
+            set(obj.isiEdit,'String',num2str(obj.config.estimated_isi_s));
+            obj.syncChair(false); obj.renderSets();
         end
         function renderSets(obj)
-            rows = cell(numel(obj.config.groups),6);
+            rows = cell(numel(obj.config.groups),7);
             for k = 1:size(rows,1)
                 g = obj.config.groups(k);
                 n = sum(strcmp({obj.config.items.set_name},g.name));
-                rows(k,:) = {logical(g.enabled),g.name,g.modality,n,g.folder,g.timing};
+                rows(k,:) = {logical(g.enabled),g.name,g.modality,n,g.folder,g.timing,''};
             end
             set(obj.setsTable,'Data',rows);
             set(obj.status,'String',sprintf('%d folders, %d files. Settings apply next trial; folder additions next Run.', ...
                 numel(obj.config.groups),numel(obj.config.items)));
+            obj.updateEstimate();
         end
         function syncSets(obj,event)
             rows = get(obj.setsTable,'Data');
@@ -138,6 +156,7 @@ classdef StimulusSessionPanel < handle
                 obj.config.groups(k).enabled = logical(rows{k,1});
                 obj.config.groups(k).modality = rows{k,3};
             end
+            if nargin>1, obj.updateEstimate(); end
         end
         function syncShared(obj,varargin)
             row = get(obj.sharedTable,'Data'); keys = obj.sharedKeys();
@@ -156,20 +175,67 @@ classdef StimulusSessionPanel < handle
                 end
             end
             if corrected, set(obj.sharedTable,'Data',row); end
+            if ~isempty(varargin), obj.updateEstimate(); end
         end
-        function syncChair(obj)
+        function syncChair(obj,refresh)
+            if nargin<2, refresh=true; end
             modes = {'full','cap'};
             obj.config.chair_duration_mode = modes{get(obj.chairModePopup,'Value')};
             enabled = 'off'; if strcmp(obj.config.chair_duration_mode,'cap'), enabled='on'; end
             set(obj.chairMaxEdit,'Enable',enabled);
+            if refresh, obj.updateEstimate(); end
         end
-        function validateTime(obj,control,key)
+        function validateTime(obj,control,key,refresh)
+            if nargin<4, refresh=true; end
             value = str2double(get(control,'String'));
             if isfinite(value) && value>0
                 obj.config.(key) = value;
             else
                 set(control,'String',num2str(obj.config.(key)));
                 set(obj.status,'String','Duration must be a positive number of seconds.');
+            end
+            if refresh, obj.updateEstimate(); end
+        end
+        function validateISI(obj)
+            value = str2double(get(obj.isiEdit,'String'));
+            if isfinite(value) && value>=0
+                obj.config.estimated_isi_s = value;
+            else
+                value = .5;
+                if isfield(obj.config,'estimated_isi_s'), value=obj.config.estimated_isi_s; end
+                set(obj.isiEdit,'String',num2str(value));
+                set(obj.status,'String','Assumed ISI must be a nonnegative number of seconds.');
+            end
+            obj.updateEstimate();
+        end
+        function updateEstimate(obj)
+            if isempty(obj.config), return; end
+            try
+                repeats = 1;
+                if ~isempty(obj.repeatsEdit), repeats=str2double(get(obj.repeatsEdit,'String')); end
+                isi = str2double(get(obj.isiEdit,'String'));
+                e = session_duration_estimate(obj.config,repeats,isi);
+                rows = get(obj.setsTable,'Data');
+                for k = 1:size(rows,1)
+                    durations = [e.plan(strcmp({e.plan.set_name},rows{k,2})).duration_s];
+                    rows{k,7} = '-';
+                    if ~isempty(durations)
+                        rows{k,7} = sprintf('%.3g to %.3g',min(durations),max(durations));
+                        if min(durations)==max(durations), rows{k,7}=sprintf('%.3g',durations(1)); end
+                    end
+                end
+                set(obj.setsTable,'Data',rows);
+                set(obj.estimateText,'String',sprintf([ ...
+                    '%d presentations/pass x %d repeats = %d presentations\n' ...
+                    'Each stimulus: %.3g to %.3g s; stimulus-only total: %.3f s\n' ...
+                    '%d ISIs x %.3g s = %.3f s\nEstimated total: %.3f s (%.2f min)'], ...
+                    e.presentations_per_pass,repeats,e.presentations,e.min_duration_s,e.max_duration_s, ...
+                    e.stimulus_duration_s,e.intervals,isi,e.isi_duration_s, ...
+                    e.total_duration_s,e.total_duration_s/60));
+            catch err
+                rows = get(obj.setsTable,'Data');
+                if ~isempty(rows), rows(:,7)={'-'}; set(obj.setsTable,'Data',rows); end
+                set(obj.estimateText,'String',['Estimate unavailable: ' err.message]);
             end
         end
         function validateReward(obj)
@@ -184,9 +250,9 @@ classdef StimulusSessionPanel < handle
         function config = snapshot(obj,refresh)
             if nargin<2, refresh=false; end
             assert(~isempty(obj.config),'Marmulator:MissingCatalog','Load a stimulus catalog first.');
-            obj.syncSets(); obj.syncShared(); obj.syncChair(); obj.validateReward();
-            obj.validateTime(obj.chairMaxEdit,'chair_max_duration_s');
-            obj.validateTime(obj.actionsTimeEdit,'actions_duration_s');
+            obj.syncSets(); obj.syncShared(); obj.syncChair(false); obj.validateReward();
+            obj.validateTime(obj.chairMaxEdit,'chair_max_duration_s',false);
+            obj.validateTime(obj.actionsTimeEdit,'actions_duration_s',false);
             obj.config.enabled = logical(get(obj.enableCheck,'Value'));
             colors = get(obj.backgroundPopup,'String');
             obj.config.background = colors{get(obj.backgroundPopup,'Value')};

@@ -95,6 +95,38 @@ verifyEqual(testCase,session_fixation_fraction([0 .01],[1 NaN],.02),.5);
 verifyEqual(testCase,session_fixation_fraction([0 .01],[0 0],.02),0);
 verifyEqual(testCase,session_fixation_fraction([0 .01],[1 1],.02),1);
 end
+function testDurationEstimate(testCase)
+c = load_stimulus_catalog(fullfile(getenv('HOME'),'Stimuli','stimuli_2p'));
+g = find(strcmp({c.groups.name},'phee'));
+c.items = c.items([find(strcmp({c.items.set_name},'phee'),1), ...
+    find(strcmp({c.items.set_name},'bodies'),1)]);
+for k = 1:numel(c.groups)
+    c.groups(k).enabled = ismember(c.groups(k).name,{'phee','bodies'});
+end
+c.shared.duration_s = 1.5;
+c.groups(g).modality = 'AV,A,V';
+c.chair_duration_mode = 'cap'; c.chair_max_duration_s = 1;
+state = rng;
+e = session_duration_estimate(c,3,2);
+verifyEqual(testCase,rng,state); % Preview must not alter presentation randomization.
+verifyEqual(testCase,e.presentations_per_pass,4);
+verifyEqual(testCase,e.presentations,12);
+verifyEqual(testCase,e.stimulus_duration_s,13.5,'AbsTol',1e-9);
+verifyEqual(testCase,e.isi_duration_s,22);
+verifyEqual(testCase,e.total_duration_s,35.5,'AbsTol',1e-9);
+verifyEqual(testCase,e.min_duration_s,1);
+verifyEqual(testCase,e.max_duration_s,1.5);
+e = session_duration_estimate(c,1,0);
+verifyEqual(testCase,e.total_duration_s,e.stimulus_duration_s);
+% A single presentation has no between-stimulus gap.
+c.items = c.items(find(strcmp({c.items.set_name},'phee'),1));
+c.groups(g).modality = 'AV';
+e = session_duration_estimate(c,1,10);
+verifyEqual(testCase,e.intervals,0);
+verifyEqual(testCase,e.total_duration_s,1);
+verifyError(testCase,@()session_duration_estimate(c,1,-1), ...
+    'MATLAB:expectedNonnegative');
+end
 function testTonesAndCustomAudioDuration(testCase)
 c = load_stimulus_catalog(fullfile(getenv('HOME'),'Stimuli','stimuli_2p'));
 g = find(strcmp({c.groups.name},'tones'));
@@ -117,7 +149,8 @@ function testPanel(testCase)
 f = figure('Visible','off','Position',[0 0 790 790]);
 cleanup = onCleanup(@()close(f)); %#ok<NASGU>
 b = uicontrol(f,'Style','checkbox');
-p = StimulusSessionPanel(f,b);
+r = uicontrol(f,'Style','edit','String','2');
+p = StimulusSessionPanel(f,b,r);
 verifyEqual(testCase,numel(p.config.items),639);
 set(p.enableCheck,'Value',1);
 c = p.snapshot();
@@ -129,6 +162,18 @@ set(p.sharedTable,'Data',row);
 c = p.snapshot(true);
 verifyEqual(testCase,c.shared.duration_s,.8);
 verifyEqual(testCase,c.shared.offset_x_deg,3);
+set(p.isiEdit,'String','2'); p.validateISI();
+verifyEqual(testCase,p.config.estimated_isi_s,2);
+e = session_duration_estimate(c,2,2);
+verifySubstring(testCase,strjoin(cellstr(get(p.estimateText,'String')),newline), ...
+    sprintf('Estimated total: %.3f s',e.total_duration_s));
+set(r,'String','3'); p.updateEstimate();
+verifySubstring(testCase,strjoin(cellstr(get(p.estimateText,'String')),newline),'x 3 repeats');
+set(p.isiEdit,'String','-1'); p.validateISI();
+verifyEqual(testCase,get(p.isiEdit,'String'),'2');
+rows = get(p.setsTable,'Data'); rows(:,1)={false}; set(p.setsTable,'Data',rows);
+p.syncSets(struct('Indices',[1 1]));
+verifySubstring(testCase,get(p.estimateText,'String'),'Estimate unavailable');
 end
 
 function testGeneratedWavFrequencies(testCase)

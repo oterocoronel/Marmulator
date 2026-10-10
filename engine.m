@@ -924,6 +924,7 @@ end
 
 %% SETUP: movie mode
 specialFlags = 2; % RJM was 2 
+movie_clip_mode = isfield(s,'movie_clip_count') && ~isempty(s.movie_clip_count);
 if strcmp(stim_mode, 'movie')
 
     PsychImaging('PrepareConfiguration');
@@ -968,6 +969,15 @@ if strcmp(stim_mode, 'movie')
         end
     end
 
+    if movie_clip_mode
+        validateattributes(s.movie_clip_count, {'numeric'}, {'scalar','integer','positive','finite'});
+        assert(numel(movienames)==1, 'Marmulator:ClipSource', ...
+            'The clip design requires exactly one movie in movie_folder.');
+        assert(~movie_play_sound, 'Marmulator:ClipAudio', ...
+            'The clip design requires movie_play_sound=false.');
+        movienames = repmat(movienames,1,s.movie_clip_count);
+        reset_movie_time_index = true;
+    end
     %moviePtr = Screen('OpenMovie', win, fullfile(movie_folder, movienames{1}), [], 1, 64);
     n_stim = numel(movienames); 
     fprintf('Found %d movie (?) files in folder %s\n', n_stim, movie_folder);
@@ -1003,6 +1013,11 @@ if strcmp(stim_mode, 'movie')
         Screen('PlayMovie', moviePtr(m), movie_rate, loop_movie);
         WaitSecs(0.1);
 
+    end
+    movie_start_times = zeros(1,n_stim);
+    if movie_clip_mode
+        movie_start_times = movie_clip_start_times(movie_durations(1), ...
+            s.movie_clip_count, presentation_time/1000, movie_rate);
     end
 end
 
@@ -1124,6 +1139,11 @@ elseif strcmp(stim_mode, 'images') || strcmp(stim_mode, 'movie')
         img_seq = img_seq(tr_ridx, :);
         img_seq = img_seq';
 
+    elseif strcmp(image_order, 'balanced_per_location')
+        assert(strcmp(stim_mode, 'movie'), 'Marmulator:BalancedMovieMode', ...
+            'balanced_per_location requires stim_mode=''movie''.');
+        % Assigned jointly with locations below, before wake-up insertion.
+        img_seq = zeros(1,n_trs_requested);
     elseif strcmp(image_order, 'random')
         if strcmp(stim_mode, 'movie') % hacky fix this later
             img_seq = [];
@@ -1243,6 +1263,9 @@ else
 end
 
 tr_seq = tr_seq(1:n_trs_curr);
+if ~session_mode && strcmp(stim_mode, 'movie') && strcmp(image_order, 'balanced_per_location')
+    img_seq = balanced_movie_sequence(tr_seq, n_stim);
+end
 
 %% SETUP: wake_up images
 if wake_up_trials && ~m2s_mode % for now, m2s doesn't work with wakeup images
@@ -1852,8 +1875,8 @@ for i = 1:n_trs_tot
             PsychPortAudio('FillBuffer', ppa_handle, audio_handle(movie_audio_handle_idx(img_idx))); 
         end
         if reset_movie_time_index
-            Screen('SetMovieTimeIndex', moviePtr(img_idx), 0);
-            fprintf('Reset movie time idx for %d to 0\n', img_idx);
+            Screen('SetMovieTimeIndex', moviePtr(img_idx), movie_start_times(img_idx));
+            fprintf('Reset movie %d to %.3f s\n', img_idx, movie_start_times(img_idx));
         end
         %WaitSecs(0.1);
     end
@@ -2056,7 +2079,7 @@ for i = 1:n_trs_tot
                         end
 
                         if stfridx == 1 && reset_movie_time_index
-                            Screen('SetMovieTimeIndex', moviePtr(img_idx), 0.0)
+                            Screen('SetMovieTimeIndex', moviePtr(img_idx), movie_start_times(img_idx));
                         end
 
                         movtex_new = Screen('GetMovieImage', win, moviePtr(img_idx), waitforimage);
@@ -2789,6 +2812,7 @@ calib_settings.inter_stim_interval = inter_stim_interval;
 calib_settings.iti_random = iti_random;
 calib_settings.iti_frames = iti_frames;
 calib_settings.position_order = position_order;
+calib_settings.image_order = image_order;
 calib_settings.bg_col = bg_col_val;
 calib_settings.black_surround = black_surround;
 calib_settings.surround_margin_deg = surround_margin_deg;
@@ -2816,6 +2840,8 @@ elseif strcmp(stim_mode, 'movie')
     calib_settings.reset_movie_time_index = reset_movie_time_index; 
     calib_settings.movie_play_sound = movie_play_sound; 
     calib_settings.movie_audionames = audionames; 
+    calib_settings.movie_start_times_s = movie_start_times;
+    if movie_clip_mode, calib_settings.movie_clip_count = s.movie_clip_count; end
 else
     calib_settings.img_list = [];
 end
