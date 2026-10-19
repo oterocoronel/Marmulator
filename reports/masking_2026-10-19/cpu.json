@@ -1,0 +1,15 @@
+{
+  "comparisons": 18,
+  "identical": true,
+  "mask_size": [
+    786,
+    786,
+    4
+  ],
+  "mask_bytes": 2.471184E+6,
+  "mask_generation_ms": 20.502753000000002,
+  "foreground_1292_ms": 0.986753,
+  "old_eye_parse_ms": 0.23361383333333333,
+  "new_eye_parse_ms": 0.0031692649402390439,
+  "new_recording_packet_ms": 0.015613833333333334
+}

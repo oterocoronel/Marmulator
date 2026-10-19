@@ -148,15 +148,40 @@ set(handles.expt_params_edit, 'String', fullfile(handles.base_dir, 'experiment_p
 % Keep the surround setting when switching experiment files.
 handles.black_surround_check = uicontrol(handles.figure1, ...
     'Style', 'checkbox', 'Tag', 'black_surround_check', 'Units', 'characters', ...
-    'Position', [3.4 22.1 70 1.6], 'String', 'Black surround (15 to 20 deg circle)', ...
+    'Position', [3.4 22.1 70 1.6], 'String', 'Black circular surround', ...
     'Value', 0, 'BackgroundColor', get(handles.figure1, 'Color'), ...
     'TooltipString', ['Keep the background unchanged within a 15-degree circle, fading to black by 20 degrees. ' ...
         'The circle follows the stimulus location; the photodiode stays visible. Applies to the next Run.']);
 
-handles.session_panel = StimulusSessionPanel(handles.figure1, handles.black_surround_check, handles.repeats_edit);
+handles.session_panel = StimulusSessionPanel(handles.figure1, handles.black_surround_check);
+handles.session_panel.bindLegacy(handles);
 
 % Update handles structure
 guidata(hObject, handles);
+last_run_file=fullfile(mdir,'gui','flexible_2p_last_run.mat');
+if isfile(last_run_file)
+    try
+        last=load(last_run_file,'experiment_file','wait_for_2p');
+        if isfile(last.experiment_file)
+            [folder,name,ext]=fileparts(last.experiment_file);
+            handles.expt_params_dir=folder;
+            files=dir(fullfile(folder,'*.mat')); handles.expt_params_list={files.name};
+            choices=[{'[select experiment params]'} handles.expt_params_list];
+            set(handles.expt_params_edit,'String',folder);
+            set(handles.select_popup,'String',choices,'Value',find(strcmp(choices,[name ext]),1));
+            select_popup_Callback(handles.select_popup,[],handles);
+            handles=guidata(hObject);
+            handles.session_panel.restoreLastRun(last_run_file);
+        else
+            set(handles.status_text,'String','Last flexible 2p experiment file is unavailable; select a profile.');
+            handles.session_panel.restoreLastRun(last_run_file);
+        end
+        set(handles.wait_for_2p_check,'Value',last.wait_for_2p);
+    catch err
+        set(handles.status_text,'String',['Could not restore last Run: ' err.message]);
+    end
+    guidata(hObject,handles);
+end
 
 % UIWAIT makes Marmulator wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -317,14 +342,36 @@ if ~handles.trig_arduino_connected
     handles.trigger_arduino = [];
 end
 
-if get(handles.wait_for_2p_check, 'Value')
-    assert(handles.trig_arduino_connected, 'wait for 2p is checked but trigger arduino is not connected')
-    trig_read_pin = str2double(get(handles.trigger_read_pin_edit, 'String')); 
-    assert(~isnan(trig_read_pin), sprintf('trig read pin may not be numeric'))
-    handles.trigger_arduino.trig_2p_read_pin  = trig_read_pin; 
-    assign_2p_trig_pins(handles.trigger_arduino); 
-    fprintf('Will wait for 2p trigger on pin %d before stimulus start\n', trig_read_pin )
-    wait_for_2p_trig = true; 
+% Flexible stimulation settings come from the panel; hardware stays in GUIDE.
+black_surround = logical(get(handles.black_surround_check,'Value'));
+session_config = []; session_reader = [];
+wait_for_2p_trig = logical(get(handles.wait_for_2p_check,'Value'));
+if get(handles.session_panel.enableCheck,'Value')
+    try
+        session_config = handles.session_panel.snapshot(true);
+        flexible_2p('plan',session_config,session_config.run.repeats,false);
+        session_reader = @(item,modality)handles.session_panel.currentTrial(item,modality);
+        black_surround = session_config.surround.enabled;
+    catch me
+        set(handles.status_text,'String',me.message);
+        set(hObject,'Enable','on');
+        return
+    end
+end
+
+if wait_for_2p_trig
+    try
+        assert(handles.trig_arduino_connected,'Connect the trigger Arduino before enabling Wait for 2p.');
+        trig_read_pin = str2double(get(handles.trigger_read_pin_edit,'String'));
+        validateattributes(trig_read_pin,{'numeric'},{'scalar','integer','finite','>=',0,'<=',25});
+        handles.trigger_arduino.trig_2p_read_pin = trig_read_pin;
+        assign_2p_trig_pins(handles.trigger_arduino);
+        fprintf('Will wait for 2p trigger on pin %d before stimulus start\n',trig_read_pin);
+    catch me
+        set(handles.status_text,'String',me.message);
+        set(hObject,'Enable','on');
+        return
+    end
 else
     wait_for_2p_trig = false; 
     fprintf('IMPORTANT: wait for 2p trigger is not checked, will not wait for trigger')
@@ -350,6 +397,12 @@ mouse_for_eye = get(handles.mouse_eye_check, 'Value');
 require_fix_tr_init = get(handles.require_fix_check, 'Value');
 fixation_to_init = str2double(get(handles.fixation_edit, 'String'));
 time_out_trial_init_s  = str2double(get(handles.time_out_edit, 'String'));
+if ~isempty(session_config)
+    repeats_per_loc = session_config.run.repeats;
+    require_fix_tr_init = session_config.run.require_fixation;
+    fixation_to_init = session_config.run.fixation_before_s*1000;
+    time_out_trial_init_s = session_config.run.fixation_timeout_s;
+end
 
 n_rsvp = str2double(get(handles.n_rsvp_edit, 'String'));
 break_after = str2double(get(handles.break_after_edit, 'String'));
@@ -393,24 +446,18 @@ end
 punish_time_ms = str2double(get(handles.punish_time_edit, 'String'));
 training_notes_str = get(handles.notes_edit, 'String');
 
-black_surround = logical(get(handles.black_surround_check, 'Value'));
-session_config = [];
-session_reader = [];
-if get(handles.session_panel.enableCheck,'Value')
-    try
-        session_config = handles.session_panel.snapshot(true);
-        session_plan(session_config,repeats_per_loc); % fail before opening hardware/display
-        session_reader = @(item,modality)handles.session_panel.currentTrial(item,modality);
-    catch me
-        set(handles.status_text,'String',me.message);
-        set(hObject,'Enable','on');
-        return
-    end
-end
 
 set(handles.status_text, 'String', sprintf('Session: calib_%s_%s.mat', handles.subject, session_time));
 
+if ~isempty(session_config)
+    handles.session_panel.setRunning(true);
+    panel_cleanup = onCleanup(@()handles.session_panel.setRunning(false)); %#ok<NASGU>
+end
+
 try
+    if ~isempty(session_config)
+        handles.session_panel.rememberRun(session_config,handles.params_file,wait_for_2p_trig);
+    end
     % start the engine
     [~,calib,save_full] = engine(ra, handles.reward_pin, handles.subject,...
         handles.params_file, handles.calib_file, gaze_offset, repeats_per_loc, ...
@@ -533,6 +580,8 @@ if ~isempty(taskgui_h)
     close(taskgui_h);
 end
 
+set(handles.session_panel.enableCheck,'Value',0);
+handles.session_panel.setEnabled();
 curridx = get(hObject, 'Value');
 flist = get(hObject, 'String');
 if curridx == 1
@@ -667,6 +716,7 @@ end
 fprintf('loaded params: %s \n', flist{curridx}); 
 disp(handles.params); 
 
+handles.session_panel.setEnabled();
 guidata(hObject, handles);
 
 

@@ -11,7 +11,8 @@ if nargin < 32, session_reader = []; end
 session_mode = ~isempty(session_config) && session_config.enabled;
 session_player = [];
 if session_mode
-    session_trials = session_plan(session_config, trs_per_location);
+    session_config = flexible_2p('defaults',session_config);
+    session_trials = flexible_2p('plan',session_config, trs_per_location);
 end
 
 profile_memory = false; % flag for tracking memory usage
@@ -121,17 +122,34 @@ if session_mode
     s.wake_up_trials = false; s.n_pts_x = 1; s.n_pts_y = 1; s.add_center = false;
     s.manual_bounding_boxes = []; s.manual_bounding_boxes_stim_pre_dot = [];
     n_rsvp = 1;
-    if require_fix_tr_init, s.stimulus_pre_dot = true; end
+    s.stimulus_pre_dot = logical(require_fix_tr_init);
+    s.stimulus_pre_time = 0; % No hidden pre-stimulus delay in fixed-duration sessions.
+    s.stimulus_pre_dot_disappear = true;
+    s.inter_stim_interval = session_config.run.inter_trial_interval_s*1000;
+    s.iti_random = false;
+    s.bg_col = 'gray';
+    time_out_trial_init_s = Inf; % Flexible sessions wait until fixation or Escape.
 end
 s = apply_experiment_geometry(s, setup_config);
+if session_mode
+    assert(isfield(s,'display_geometry'),'Marmulator:MissingDisplayGeometry', ...
+        'Flexible 2p sessions require physical display geometry in setup or the profile.');
+    s.display_geometry.pixels_per_cm = s.display_geometry.resolution_px ./ s.display_geometry.size_cm;
+end
 surround_margin_deg = 2.5; % radial fade width
 surround_inner_diameter_deg = 15;
 surround_outer_diameter_deg = surround_inner_diameter_deg + 2*surround_margin_deg;
 surround_gamma = 2.2; % approximate display gamma, not a measured calibration
+if session_mode
+    surround_inner_diameter_deg = 2*session_config.surround.inner_radius_deg;
+    surround_margin_deg = session_config.surround.fade_width_deg;
+    surround_outer_diameter_deg = surround_inner_diameter_deg+2*surround_margin_deg;
+end
 % Older direct callers can still enable the surround in the experiment file.
 if nargin < 30 || isempty(black_surround)
     black_surround = isfield(s, 'black_surround') && s.black_surround;
 end
+if session_mode, black_surround = black_surround || session_config.surround.enabled; end
 surround_rect = [];
 surround_mask_rects = [];
 surround_texture_rects = [];
@@ -207,7 +225,7 @@ reward_on = s.reward_on;
 location_require_quality = s.location_require_quality;
 stim_mode = s.stim_mode;
 progress_dot = strcmp(stim_mode, 'progress_dot');
-dot_unlock_progress = 0.25; % Keep the unlocked dot visible against a gray background.
+dot_unlock_progress = 0.25; % Fraction of shrinking completed during initiation.
 if progress_dot
     assert(strcmp(trial_mode, 'foraging') && strcmp(reward_on, 'location') && ...
         require_fix_tr_init && s.stimulus_pre_dot && n_rsvp == 1 && ...
@@ -439,6 +457,9 @@ pupil_size_x = []; % deprecated - from Arrington system
 pupil_size_y = []; % deprecated - from Arrington system 
 
 idx_all = 0;
+t_start_sec = [];
+eye_recording = [];
+continuous_eye = [];
 gaze_pt_dot_cols = round(repmat(gaze_pt_dot_col', [1,n_gaze_pts_draw])*255);
 alphas = linspace(0, 255, n_gaze_pts_draw);
 rgba_cols = [gaze_pt_dot_cols; alphas];
@@ -815,6 +836,18 @@ end
 % REMOVE FEAT: CSF
 
 %% LOAD: preload all textures
+if progress_dot
+    % One fixed binary-noise texture per session; do not regenerate each frame.
+    noise_size = ceil(2*stim_pre_dot_sz);
+    [noise_x,noise_y] = meshgrid((1:noise_size)-(noise_size+1)/2);
+    noise_pixels = uint8(255*(rand(noise_size) >= 0.5));
+    noise_alpha = uint8(255*(hypot(noise_x,noise_y) <= noise_size/2));
+    noise_image = cat(3,noise_pixels,noise_pixels,noise_pixels,noise_alpha);
+    dot_noise_texture = Screen('MakeTexture',win,noise_image);
+    if ctrl_screen
+        dot_noise_texture_ctrl = Screen('MakeTexture',win_ctrl,noise_image);
+    end
+end
 % load all image textures
 if strcmp(stim_mode, 'images') || strcmp(stim_mode,'spinning') || strcmp(stim_mode, 'smooth pursuit')
     imgs_texture = zeros(1,length(imgs));
@@ -1480,6 +1513,7 @@ end
 
 session_effective_trials = cell(1,n_trs_tot);
 session_fixation_scores = nan(1,n_trs_tot);
+session_fixation_duration_s = nan(1,n_trs_tot);
 session_audio_start = nan(1,n_trs_tot);
 session_movie_pts = cell(1,n_trs_tot);
 session_skipped = false(1,n_trs_tot);
@@ -1532,6 +1566,10 @@ seqidx = 0;
 drawBlackSurround();
 vbl = Screen('Flip', win);
 t_start_sec = GetSecs();
+if use_eyetracker && ismethod(eyetracker,'startRecording')
+    eyetracker.startRecording(t_start_sec);
+    eye_recording=onCleanup(@()eyetracker.stopRecording());
+end
 
 for i = 1:n_trs_tot
     fprintf('trial %d\n', i);
@@ -1551,23 +1589,30 @@ for i = 1:n_trs_tot
         degToPx = @(a) 2*g.viewing_distance_cm*tand(a/2).*g.pixels_per_cm;
         stim_size_px = degToPx(current_session_trial.stim_size_deg);
         fixation_size_px = degToPx(current_session_trial.fixation_size_deg);
+        initiation_size_px = degToPx(current_session_trial.initiation_size_deg);
         center = [x_cent y_cent] + g.viewing_distance_cm* ...
             tand(current_session_trial.offset_deg).*g.pixels_per_cm;
         all_pts(1,:) = center;
         stim_rect_size_x = stim_size_px(1); stim_rect_size_y = stim_size_px(2);
         bounding_rects(1,:) = [center-fixation_size_px/2 center+fixation_size_px/2];
-        bounding_rects_stim_pre_dot(1,:) = bounding_rects(1,:);
+        bounding_rects_stim_pre_dot(1,:) = [center-initiation_size_px/2 center+initiation_size_px/2];
         presentation_time = current_session_trial.duration_s*1000;
         stim_frames = max(1,round(current_session_trial.duration_s/ifi));
         reward_thresh = current_session_trial.reward_fraction;
-        switch current_session_trial.background
-            case 'gray', bg_col_val = graycol;
-            case 'black', bg_col_val = blackcol;
-            case 'white', bg_col_val = whitecol;
+        current_session_trial.surround.enabled = black_surround; % Enable is fixed for this Run.
+        new_inner = 2*current_session_trial.surround.inner_radius_deg;
+        new_outer = new_inner+2*current_session_trial.surround.fade_width_deg;
+        if new_inner~=surround_inner_diameter_deg || new_outer~=surround_outer_diameter_deg
+            surround_mask_image = [];
         end
+        surround_inner_diameter_deg = new_inner; surround_outer_diameter_deg = new_outer;
+        surround_margin_deg = current_session_trial.surround.fade_width_deg;
+        current_session_trial.background = 'gray';
+        bg_col_val = graycol;
         current_session_trial.scheduled_duration_s = stim_frames*ifi;
         current_session_trial.stim_rect_px = [center-stim_size_px/2 center+stim_size_px/2];
         current_session_trial.fixation_rect_px = bounding_rects(1,:);
+        current_session_trial.initiation_rect_px = bounding_rects_stim_pre_dot(1,:);
         session_player.prepare(current_session_trial);
         current_session_trial.visual_source_rect_px = session_player.sourceRect;
         current_session_trial.visual_mean_foreground_size_px = [];
@@ -1646,7 +1691,6 @@ for i = 1:n_trs_tot
         updateBlackSurround([xcurr ycurr]);
         surround_centers(i,:) = [xcurr ycurr];
     end
-    idx_all = idx_all +1;
 
     %drawInfoText();
     drawBoundingBoxes();
@@ -1666,7 +1710,6 @@ for i = 1:n_trs_tot
     end
     
     for j = 1:iti_frames(i)
-        idx_all = idx_all +1;
         %drawInfoText();
         
         drawBoundingBoxes();
@@ -1696,7 +1739,6 @@ for i = 1:n_trs_tot
         while ~end_stim_pre
             
             j = j+1;
-            idx_all = idx_all +1;
             
             % draw background if in constant background mode
             if seqidx~= 0 && constant_bg_mode
@@ -1716,7 +1758,7 @@ for i = 1:n_trs_tot
             
             if seqidx ~= 0
                 if progress_dot
-                    % White -> light gray during acquisition; retain progress on misses.
+                    % Shrink during acquisition; retain progress on misses.
                     drawProgressDot(dot_unlock_progress*fix_pre_fr_ctr/ ...
                         max(1,round(fixation_to_init/1e3/ifi)));
                 elseif draw_crosshairs
@@ -1850,7 +1892,8 @@ for i = 1:n_trs_tot
         stim_pre_end(i) = GetSecs() - t_start_sec;
     end
 
-    if wait_for_2p_trig && ~trial_init_timed_out(i) && ~exit_flag
+    % The noise-circle task runs freely after the session-start trigger.
+    if wait_for_2p_trig && ~progress_dot && ~trial_init_timed_out(i) && ~exit_flag
         if ~waitFor2pTrigger('stimulus')
             exit_flag = true;
             trial_aborted(i) = true;
@@ -1925,7 +1968,6 @@ for i = 1:n_trs_tot
         end
         
         stfridx = stfridx + 1; % stim frame idx, counts every frame from stim start (rsvp_1) through trial stim end (rsvp_n)
-        idx_all = idx_all +1; % idx for all frames recorded
         
         if ~trial_init_timed_out(i)
             % draw gray background:
@@ -1974,8 +2016,7 @@ for i = 1:n_trs_tot
                 %% RUN: STIM MODE SWITCH FOR DRAWING
                 switch stim_mode
                     case 'progress_dot'
-                        % Continue light gray -> black at the same position and size.
-                        % Include the pending intervals so the last hold frame is black.
+                        % Continue shrinking; include the pending hold intervals.
                         dot_display_inside_s = max(dot_display_inside_s, dot_inside_s + ...
                             ifi*(dot_previous_inside + eye_in_bb_curr(stfridx)));
                         drawProgressDot(dot_unlock_progress + (1-dot_unlock_progress)* ...
@@ -2526,20 +2567,18 @@ for i = 1:n_trs_tot
             %calib_end_t(i) = GetSecs()-t_start_sec;
             calib_end_t(i) = vbl - t_start_sec;
             if dot_trial
-                dot_fixation_fraction(i) = session_fixation_fraction( ...
+                [dot_fixation_fraction(i),dot_fixation_duration_s(i)] = flexible_2p('fixation', ...
                     frame_st_t,eye_in_bb_curr(1:numel(frame_st_t)),calib_end_t(i));
-                dot_fixation_duration_s(i) = dot_fixation_fraction(i)* ...
-                    (calib_end_t(i)-calib_st_t(i));
                 correct_trial(i) = dot_fixation_duration_s(i) + 1e-9 >= time_to_reward/1e3 && ...
                     dot_fixation_fraction(i) + 1e-9 >= reward_thresh;
             end
             if session_mode
-                session_fixation_scores(i) = session_fixation_fraction( ...
+                [session_fixation_scores(i),session_fixation_duration_s(i)] = flexible_2p('fixation', ...
                     frame_st_t,eye_in_bb_curr(1:numel(frame_st_t)),calib_end_t(i));
                 session_player.stop();
                 session_audio_start(i) = session_player.audioStart-t_start_sec;
                 session_movie_pts{i} = session_player.moviePTS;
-                correct_trial(i) = session_fixation_scores(i) >= reward_thresh;
+                correct_trial(i) = session_fixation_scores(i) + 1e-9 >= reward_thresh;
             end
             if n_rsvp>1
                 rsvp_end_t(rsvp_ctr, i) = vbl-t_start_sec;
@@ -2643,7 +2682,7 @@ for i = 1:n_trs_tot
                                 %WaitSecs(reward_on_dur);
                             else
                                 reward_pumphand.digitalWrite(reward_arduino_pin, 1);
-                                WaitSecs(reward_on_dur);
+                                waitWithEyeLogging(reward_on_dur);
                                 %reward_pumphand.digitalWrite(10, 0); RM
                                 %fix after audit 2026-08-10
                                 reward_pumphand.digitalWrite(reward_arduino_pin, 0);
@@ -2660,6 +2699,7 @@ for i = 1:n_trs_tot
                     end
                     
                     for w = 1:wait_after_rew_frames
+                        get_eyetracker_draw_dots();
                         %drawInfoText();
                         drawBoundingBoxes();
                         if draw_retain_bb_pts
@@ -2694,6 +2734,7 @@ for i = 1:n_trs_tot
                 for p = 1:n_pun_frames
                     Screen('FillRect', win, blackcol);
                     if ctrl_screen; Screen('FillRect', win_ctrl, blackcol); end
+                    get_eyetracker_draw_dots();
                     %drawInfoText(1);
                     drawBoundingBoxes();
                     checkLick();
@@ -2740,7 +2781,7 @@ for i = 1:n_trs_tot
             session_audio_start(i) = session_player.audioStart-t_start_sec;
             session_movie_pts{i} = session_player.moviePTS;
             if ~isempty(frame_st_t)
-                session_fixation_scores(i) = session_fixation_fraction( ...
+                [session_fixation_scores(i),session_fixation_duration_s(i)] = flexible_2p('fixation', ...
                     frame_st_t,eye_in_bb_curr(1:numel(frame_st_t)),calib_end_t(i));
             end
             calib_frame_st_t{i} = frame_st_t;
@@ -2776,12 +2817,14 @@ if ctrl_screen; Screen('FillRect', win_ctrl, bg_col_val); end
 
 
 for j = 1:round(median(iti_frames))*2 % RM - why? 
+    get_eyetracker_draw_dots();
     drawBlackSurround();
     vbl = Screen('Flip', win);
     if ctrl_screen; vbl2 = flipControlWindow([]); end
 end
 
 t2 = GetSecs;
+if ~isempty(eye_recording), continuous_eye=eyetracker.stopRecording(); end
 if session_mode, session_player.stop(); end
 Screen('CloseAll');
 PsychPortAudio('Close');
@@ -2814,6 +2857,7 @@ end
 if session_mode
     calib.session_trials = session_effective_trials;
     calib.fixation_fraction = session_fixation_scores;
+    calib.fixation_duration_s = session_fixation_duration_s;
     calib.session_skipped = session_skipped;
     calib.audio_start_t = session_audio_start;
     calib.movie_pts = session_movie_pts;
@@ -2987,6 +3031,7 @@ eyetrack.cY = cY;
 eyetrack.quality = eyetracker_qual;
 eyetrack.pupil_size_x =  pupil_size_x;
 eyetrack.pupil_size_y =  pupil_size_y;
+if ~isempty(continuous_eye), eyetrack.continuous=continuous_eye; end
 
 %settings.eyetracker_toolbox_dir = eyetracker_toolbox_dir;
 settings.save_data_dir = save_data_dir;
@@ -3072,9 +3117,9 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
             if ~isempty(surround_texture_ctrl), Screen('Close', surround_texture_ctrl); end
             surround_texture = [];
             surround_texture_ctrl = [];
-            surround_mask_image = make_circular_surround(s.display_geometry, ...
-                surround_inner_diameter_deg, surround_outer_diameter_deg, ...
-                (bg_col_val-blackcol)/(whitecol-blackcol), surround_gamma);
+            surround_mask_image = flexible_2p('surround',s.display_geometry, ...
+                surround_inner_diameter_deg/2, surround_margin_deg, ...
+                (bg_col_val-blackcol)/(whitecol-blackcol));
             surround_background = bg_col_val;
         end
         mask_size = [size(surround_mask_image,2) size(surround_mask_image,1)];
@@ -3136,16 +3181,19 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
     end
 
     function drawProgressDot(progress)
-        % One steady, fixed-size dot on both displays; no textures or size pulses.
-        color = whitecol + (blackcol-whitecol)*min(1,max(0,progress));
-        Screen('DrawDots', win, [xcurr ycurr], stim_pre_dot_sz, color, [], 1);
+        % Diameter shrinks from 2x to 0.5x the original dot; nearest-neighbor
+        % sampling keeps the noise black/white rather than interpolating gray.
+        diameter = stim_pre_dot_sz*(2-1.5*min(1,max(0,progress)));
+        dot_rect = CenterRectOnPoint([0 0 diameter diameter],xcurr,ycurr);
+        Screen('DrawTexture',win,dot_noise_texture,[],dot_rect,0,0);
         if ctrl_screen
-            Screen('DrawDots', win_ctrl, [xcurr ycurr]*shrink_factor, ...
-                stim_pre_dot_sz*shrink_factor, color, [], 1);
+            Screen('DrawTexture',win_ctrl,dot_noise_texture_ctrl,[], ...
+                dot_rect*shrink_factor,0,0);
         end
     end
 
     function [eyeposx_cur, eyeposy_cur, eye_data_qual] = get_eyetracker_draw_dots()
+        idx_all=idx_all+1; % One saved row per read, including between-trial samples.
         switch eye_method
             % case 'pupil-glint'
             %     [eyepos_x_tmp, eyepos_y_tmp] = vpx_GetDiffVector(eye);
@@ -3309,6 +3357,15 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
 
     function drawBoundingBoxes(curr_bb_stim_pre_dot)
         if ctrl_screen
+            if session_mode && seqidx ~= 0
+                if show_curr_bounding_box || show_all_bounding_boxes
+                    Screen('FrameRect',win_ctrl,cols(seqidx+1,:),bounding_rects(1,:)*shrink_factor,2);
+                    if require_fix_tr_init
+                        drawDashedBox(bounding_rects_stim_pre_dot(1,:)*shrink_factor,cols(seqidx+1,:));
+                    end
+                end
+                return
+            end
             if show_curr_bounding_box
                 if nargin>0 && seqidx ~= 0
                     Screen('FrameRect',win_ctrl,cols(seqidx+1,:), curr_bb_stim_pre_dot*shrink_factor,5);
@@ -3331,6 +3388,20 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
                 end
             end
         end
+    end
+
+    function drawDashedBox(rect,color)
+        % Operator display only: initiation is dashed, reward box is solid.
+        corners=[rect([1 2]);rect([3 2]);rect([3 4]);rect([1 4]);rect([1 2])];
+        lines=[];
+        for edge=1:4
+            a=corners(edge,:); d=corners(edge+1,:)-a; len=norm(d);
+            if len==0, continue; end
+            for t=0:14:len
+                lines=[lines (a+d*t/len)' (a+d*min(t+8,len)/len)']; %#ok<AGROW>
+            end
+        end
+        if ~isempty(lines), Screen('DrawLines',win_ctrl,lines,2,color); end
     end
 
     function drawGoodEyePts(during_stim)
@@ -3391,7 +3462,12 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
         t_wait_start = GetSecs();
         prev_2p = check2pTrig();
         received = false;
+        last_eye_read=GetSecs();
         while true
+            if ~isempty(t_start_sec) && GetSecs()-last_eye_read>=ifi
+                get_eyetracker_draw_dots();
+                last_eye_read=GetSecs();
+            end
             curr_2p = check2pTrig();
             if prev_2p == 0 && curr_2p == 1
                 received = true;
@@ -3404,6 +3480,14 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
                 fprintf('Wait aborted by user\n');
                 return
             end
+        end
+    end
+
+    function waitWithEyeLogging(seconds)
+        deadline=GetSecs()+seconds;
+        while GetSecs()<deadline
+            get_eyetracker_draw_dots();
+            WaitSecs(min(ifi,max(0,deadline-GetSecs())));
         end
     end
 
@@ -3542,8 +3626,6 @@ for k = 1:numel(dimensions)
     if isfield(params, degree_field)
         degrees = params.(degree_field);
         validateattributes(degrees, {'numeric'}, {'scalar','real','finite','nonnegative','<',180});
-        assert(abs(2*degrees - round(2*degrees)) < 1e-9, ...
-            'Marmulator:InvalidDegreeSize', '%s must be a multiple of 0.5 degrees.', degree_field);
         params.(dimensions{k}) = round(convertDegreesPix(degrees, ...
             geometry.viewing_distance_cm, geometry.size_cm, geometry.resolution_px));
     end
@@ -3554,46 +3636,6 @@ if isfield(params, 'manual_bounding_boxes_fraction')
 end
 end
 
-function mask = make_circular_surround(geometry, inner_diameter_deg, outer_diameter_deg, background_level, gamma)
-% Transparent over the center, increasingly opaque black through the annulus.
-% Shape the fade in approximate CIE L* lightness using a nominal
-% display gamma. This is not a photometric calibration or an animal vision model.
-% Lightness definition: https://cie.co.at/eilv/159
-pixels_per_cm = geometry.resolution_px ./ geometry.size_cm;
-distance_cm = geometry.viewing_distance_cm;
-validateattributes(pixels_per_cm, {'numeric'}, {'row','numel',2,'real','finite','positive'});
-validateattributes(distance_cm, {'numeric'}, {'scalar','real','finite','positive'});
-inner_radius = inner_diameter_deg/2;
-outer_radius = outer_diameter_deg/2;
-radius_px = ceil(distance_cm*tand(outer_radius)*pixels_per_cm);
-[x,y] = meshgrid((0.5:2*radius_px(1)-0.5)-radius_px(1), ...
-    (0.5:2*radius_px(2)-0.5)-radius_px(2));
-radius_deg = atand(hypot(x/pixels_per_cm(1), y/pixels_per_cm(2))/distance_cm);
-fade = max(0,min(1,(outer_radius-radius_deg)/(outer_radius-inner_radius)));
-% Quintic sigmoid (smootherstep): zero slope and curvature at both ends,
-% so the fade joins the constant center and black exterior smoothly.
-fade = fade.^3 .* (10 - 15*fade + 6*fade.^2);
-
-% Convert display code to relative luminance, fade L*, then convert back.
-background_level = max(background_level,eps);
-luminance = background_level^gamma;
-kappa = (29/3)^3;
-if luminance > (6/29)^3
-    lightness = 116*luminance^(1/3)-16;
-else
-    lightness = kappa*luminance;
-end
-lightness = lightness*fade;
-luminance = ((lightness+16)/116).^3;
-dark = lightness<=8;
-luminance(dark) = lightness(dark)/kappa;
-gain = max(0,min(1,luminance.^(1/gamma)/background_level));
-gain(radius_deg<=inner_radius) = 1;
-gain(radius_deg>=outer_radius) = 0;
-mask = zeros(2*radius_px(2),2*radius_px(1),4,'uint8');
-mask(:,:,4) = uint8(round(255*(1-gain)));
-end
-
 function [surround_rect, mask_rects, texture_rects] = calculate_black_surround(center, window_rect, mask_size, photodiode_rect)
 % Position the same aperture texture at the actual (already offset) stimulus.
 validateattributes(center, {'numeric'}, {'row','numel',2,'real','finite'});
@@ -3601,7 +3643,7 @@ surround_rect = [center-mask_size/2 center+mask_size/2];
 assert(all(surround_rect(1:2) >= window_rect(1:2)) && ...
     all(surround_rect(3:4) <= window_rect(3:4)), ...
     'Marmulator:SurroundDoesNotFit', ...
-    'The 20-degree circular surround does not fit at this stimulus position. Reduce the offset or disable black_surround.');
+    'The configured circular surround does not fit at this stimulus position. Reduce the offset or disable black_surround.');
 
 % Opaque bands cover everything beyond the texture's bounds. Crop both the
 % bands and texture around the photodiode, preserving its original pixels.

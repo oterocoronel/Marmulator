@@ -1,0 +1,1162 @@
+[Warning: Name is nonexistent or not a directory:
+/home/davidh/Documents/MATLAB/tests] 
+[> In path (line 89)
+In addpath (line 70)] 
+Running test_session_foreground
+.......... ...
+Done test_session_foreground
+__________
+
+Running test_session_engine
+PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 1
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 2
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 3
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 4
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 5
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 6
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 7
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.030
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.030
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.030
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.030
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.030
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.030
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.030
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+ESC key recognized, exiting
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 8
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 9
+stim trig on
+trial dur: 0.500
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.500
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 1.000
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+. PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 2.000
+stim trig off
+no reward: trial 1
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 2.000
+stim trig off
+no reward: trial 1
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.500
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+ESC key recognized, exiting
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 4
+stim trig on
+trial dur: 5.000
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 7
+stim trig on
+trial dur: 5.000
+stim trig off
+trial 8
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 9
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 10
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 11
+stim trig on
+trial dur: 5.000
+stim trig off
+trial 12
+stim trig on
+trial dur: 0.500
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+Waiting for 2p trigger on pin 3 before session start...
+2p trigger received after 20.0000 s
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 8
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 9
+stim trig on
+trial dur: 0.500
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+Waiting for 2p trigger on pin 3 before session start...
+2p trigger received after 20.0000 s
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.500
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+Waiting for 2p trigger on pin 3 before session start...
+Wait aborted by user
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+Waiting for 2p trigger on pin 3 before session start...
+2p trigger received after 0.1000 s
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 8
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 9
+stim trig on
+trial dur: 0.500
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+.[Warning: Directory already exists.] 
+[> In test_session_engine>runDot (line 378)
+In test_session_engine>test2pDoesNotPauseProgressDotWakeUpPhotos (line 335)]
+PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 0 ms
+Waiting for 2p trigger on pin 3 before session start...
+2p trigger received after 0.1000 s
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 4
+stim trig on
+trial dur: 5.000
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 8
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 9
+stim trig on
+trial dur: 5.000
+stim trig off
+trial 10
+stim trig on
+trial dur: 0.500
+stim trig off
+trial 11
+stim trig on
+trial dur: 0.500
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/dot_remote/dot_engine_test/2026-10-19/calibration/calib_dot_engine_test_2026-10-10_12-00-00.mat
+. PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+Waiting for 2p trigger on pin 3 before session start...
+2p trigger received after 20.0000 s
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 1
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 2
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 3
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 4
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 5
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 6
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 7
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+Waiting for 2p trigger on pin 3 before session start...
+2p trigger received after 20.0000 s
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+Waiting for 2p trigger on pin 3 before stimulus...
+2p trigger received after 0.2000 s
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 1
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 2
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 3
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 4
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 5
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 6
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 7
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 1
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 2
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 3
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 4
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 5
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 6
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+no reward: trial 7
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+eyetracker deleted
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.PTB old priority: 0, new priority 1
+WARNING: NO LICKOMETER ARDUINO HANDLE PROVIDED!
+Licks will not be recorded
+EYE METHOD MOUSE CHECKED - control position through mouse cursor
+punish_length_ms is 200 ms
+audio device keyword provided, will look for: fake
+Found audio device at index 0
+Using audio device fake
+trial 1
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 2
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 3
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 4
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 5
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 6
+stim trig on
+trial dur: 0.050
+stim trig off
+trial 7
+stim trig on
+trial dur: 0.050
+stim trig off
+session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/local/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+remote save: session data saved to /tmp/tp1657c3d4_918c_46cf_9d8a_d967aae8f8b0/Marmulator/remote/session_engine_test/2026-10-19/experiment/calib_session_engine_test_2026-10-10_12-00-00.mat
+.
+Done test_session_engine
+__________
+
+Running test_stimulus_sessions
+.......... .......... .
+Done test_stimulus_sessions
+__________
+
+Running test_eyetrack_data
+eyetracker deleted
+.eyetracker deleted
+.eyetracker deleted
+.
+Done test_eyetrack_data
+__________
+
+Running test_balanced_movie_sequence
+.....
+Done test_balanced_movie_sequence
+__________
+
+                                           Name                                           Passed    Failed    Incomplete    Duration      Details   
+    __________________________________________________________________________________    ______    ______    __________    ________    ____________
+
+    {'test_session_foreground/testMinimalBoundsKeepFaintEdgesAndInternalGaps'        }    true      false       false       0.075112    {1×1 struct}
+    {'test_session_foreground/testOffCenterImageFitsForegroundAtFixation'            }    true      false       false        0.19864    {1×1 struct}
+    {'test_session_foreground/testPaddingDoesNotChangeDisplayedSize'                 }    true      false       false       0.036957    {1×1 struct}
+    {'test_session_foreground/testPreviewUsesSameCrop'                               }    true      false       false       0.036034    {1×1 struct}
+    {'test_session_foreground/testOpaqueAndBlankImagesStayFinite'                    }    true      false       false       0.059117    {1×1 struct}
+    {'test_session_foreground/testGrayscaleAlpha'                                    }    true      false       false        0.02274    {1×1 struct}
+    {'test_session_foreground/testMovieCropCoversLaterFramesAndIsFixed'              }    true      false       false       0.027955    {1×1 struct}
+    {'test_session_foreground/testMovieSeekAndCropCache'                             }    true      false       false       0.035466    {1×1 struct}
+    {'test_session_foreground/testMovieMeanSizeSetsOneScaleAcrossFrames'             }    true      false       false       0.037937    {1×1 struct}
+    {'test_session_foreground/testMovieMeanWeightsDisplayedIntervalAndHeldFinalFrame'}    true      false       false       0.007662    {1×1 struct}
+    {'test_session_foreground/testMovieTransparentFramesAndOpaqueFirstFrame'         }    true      false       false       0.011165    {1×1 struct}
+    {'test_session_foreground/testOpaqueMovieDoesNotReadBackFrames'                  }    true      false       false       0.005084    {1×1 struct}
+    {'test_session_foreground/testDiscardedMovieAlphaStillFails'                     }    true      false       false         0.1086    {1×1 struct}
+    {'test_session_engine/testFixedDurationRegardlessOfGaze'                         }    true      false       false         6.8618    {1×1 struct}
+    {'test_session_engine/testLiveEditsAtTrialBoundary'                              }    true      false       false         1.3972    {1×1 struct}
+    {'test_session_engine/testLiveExclusion'                                         }    true      false       false         1.2772    {1×1 struct}
+    {'test_session_engine/testMissedDisplayFrameDoesNotExtendTrial'                  }    true      false       false         1.3881    {1×1 struct}
+    {'test_session_engine/testEscapeAbortsWithoutReward'                             }    true      false       false         1.0861    {1×1 struct}
+    {'test_session_engine/testOptionalFixationInitiation'                            }    true      false       false         1.3512    {1×1 struct}
+    {'test_session_engine/testAudioMarkerAndCenteredMovieSeek'                       }    true      false       false          1.205    {1×1 struct}
+    {'test_session_engine/testProgressDotGridAndEarlyReward'                         }    true      false       false         0.5301    {1×1 struct}
+    {'test_session_engine/testProgressDotAccumulatesInitiationAcrossMisses'          }    true      false       false        0.22949    {1×1 struct}
+    {'test_session_engine/testProgressDotRequiresFractionAndAllowsEquality'          }    true      false       false        0.20794    {1×1 struct}
+    {'test_session_engine/testProgressDotTimesOutWithoutReward'                      }    true      false       false        0.23889    {1×1 struct}
+    {'test_session_engine/testProgressDotStillRequiresHoldDuration'                  }    true      false       false        0.23694    {1×1 struct}
+    {'test_session_engine/testProgressDotWeightsDroppedFrames'                       }    true      false       false        0.19815    {1×1 struct}
+    {'test_session_engine/testProgressDotInitiationTimeoutAndEscape'                 }    true      false       false        0.46445    {1×1 struct}
+    {'test_session_engine/testProgressDotKeepsWakeUpPhotos'                          }    true      false       false        0.49078    {1×1 struct}
+    {'test_session_engine/test2pStartsProgressDotSessionBeforeInitiation'            }    true      false       false        0.38051    {1×1 struct}
+    {'test_session_engine/test2pDoesNotWaitBetweenShrinkingAndHold'                  }    true      false       false         0.2677    {1×1 struct}
+    {'test_session_engine/test2pStartupWaitCanBeCancelledWithoutStartingTrials'      }    true      false       false        0.14355    {1×1 struct}
+    {'test_session_engine/test2pDoesNotPauseProgressDotTrialsIfFramesStop'           }    true      false       false        0.29061    {1×1 struct}
+    {'test_session_engine/test2pDoesNotPauseProgressDotWakeUpPhotos'                 }    true      false       false        0.46133    {1×1 struct}
+    {'test_session_engine/test2pGatesImageVideoAndAudioTrials'                       }    true      false       false         1.3516    {1×1 struct}
+    {'test_session_engine/testRewardPercentageCanChangeAtTrialBoundary'              }    true      false       false         1.2409    {1×1 struct}
+    {'test_session_engine/testRewardRejectsTooLittleFixation'                        }    true      false       false         1.1792    {1×1 struct}
+    {'test_session_engine/testFlexibleFixationThenFresh2pTrigger'                    }    true      false       false         1.3955    {1×1 struct}
+    {'test_session_engine/testEyeLoggingContinuesDuringRewardPause'                  }    true      false       false         1.1449    {1×1 struct}
+    {'test_session_engine/testEyeLoggingContinuesDuringPunishment'                   }    true      false       false         1.1508    {1×1 struct}
+    {'test_session_engine/testSaveReceivedEyePacketsDuringMoviePreparation'          }    true      false       false         1.2704    {1×1 struct}
+    {'test_session_engine/testFlexibleInitiationHasNoTimeout'                        }    true      false       false         1.5836    {1×1 struct}
+    {'test_session_engine/testSeparateFlexibleBoxesAndOperatorOverlays'              }    true      false       false         1.4651    {1×1 struct}
+    {'test_stimulus_sessions/testCatalogAndConditions'                               }    true      false       false        0.28262    {1×1 struct}
+    {'test_stimulus_sessions/testSharedGeometryAndChairTiming'                       }    true      false       false       0.042424    {1×1 struct}
+    {'test_stimulus_sessions/testActionsCropSymmetrically'                           }    true      false       false       0.007489    {1×1 struct}
+    {'test_stimulus_sessions/testFolderContentsDefineSelection'                      }    true      false       false       0.031125    {1×1 struct}
+    {'test_stimulus_sessions/testSilentStimuliRejectAudio'                           }    true      false       false        0.02049    {1×1 struct}
+    {'test_stimulus_sessions/testTimeWeightedFixation'                               }    true      false       false        0.00523    {1×1 struct}
+    {'test_stimulus_sessions/testDurationEstimate'                                   }    true      false       false       0.063544    {1×1 struct}
+    {'test_stimulus_sessions/testTonesAndCustomAudioDuration'                        }    true      false       false       0.024484    {1×1 struct}
+    {'test_stimulus_sessions/testPanel'                                              }    true      false       false        0.56933    {1×1 struct}
+    {'test_stimulus_sessions/testGeneratedWavFrequencies'                            }    true      false       false        0.17741    {1×1 struct}
+    {'test_stimulus_sessions/testEveryRepeatContainsEveryCombination'                }    true      false       false       0.046083    {1×1 struct}
+    {'test_stimulus_sessions/testFixationSecondsMatchPercentage'                     }    true      false       false       0.014178    {1×1 struct}
+    {'test_stimulus_sessions/testSurroundUsesAngularRadiusAndWidth'                  }    true      false       false        0.25303    {1×1 struct}
+    {'test_stimulus_sessions/testFolderDiscoveryWithoutPythonOrCatalog'              }    true      false       false       0.024459    {1×1 struct}
+    {'test_stimulus_sessions/testPanelSettingsReachTrialAndRun'                      }    true      false       false        0.39631    {1×1 struct}
+    {'test_stimulus_sessions/testUncachedChairReadsVideoDuration'                    }    true      false       false        0.46874    {1×1 struct}
+    {'test_stimulus_sessions/testFixedFlexiblePoliciesOverrideOldSettings'           }    true      false       false       0.004024    {1×1 struct}
+    {'test_stimulus_sessions/testRestoreLastRunRatherThanUnsavedEdits'               }    true      false       false        0.40034    {1×1 struct}
+    {'test_stimulus_sessions/testLoadingDoesNotCopyAudio'                            }    true      false       false         0.2558    {1×1 struct}
+    {'test_stimulus_sessions/testLegacyControlsRestoreTheirState'                    }    true      false       false        0.27022    {1×1 struct}
+    {'test_stimulus_sessions/testNativeDiscoveryExcludesAlternateMovieExports'       }    true      false       false       0.029741    {1×1 struct}
+    {'test_eyetrack_data/testRecordingKeepsPacketsBetweenBehaviorReads'              }    true      false       false       0.039814    {1×1 struct}
+    {'test_eyetrack_data/testRecordingBufferGrowsWithoutDroppingPackets'             }    true      false       false        0.17142    {1×1 struct}
+    {'test_eyetrack_data/testQueuedAndSplitTcpPacketsSurviveUntilStop'               }    true      false       false         0.0131    {1×1 struct}
+    {'test_balanced_movie_sequence/testThirtyTrialsPerQuadrant'                      }    true      false       false        0.01071    {1×1 struct}
+    {'test_balanced_movie_sequence/testRemaindersAndShortSessions'                   }    true      false       false        0.24159    {1×1 struct}
+    {'test_balanced_movie_sequence/testSingleMovieAndColumnLocations'                }    true      false       false       0.004129    {1×1 struct}
+    {'test_balanced_movie_sequence/testProfile'                                      }    true      false       false       0.007599    {1×1 struct}
+    {'test_balanced_movie_sequence/testFixedClipStarts'                              }    true      false       false        0.01222    {1×1 struct}
+

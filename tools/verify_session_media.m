@@ -3,7 +3,7 @@ function verify_session_media(root)
 if nargin<1, root = fullfile(getenv('HOME'),'Stimuli','stimuli_2p'); end
 base = fileparts(fileparts(mfilename('fullpath')));
 sc = load(fullfile(base,'setup_config.mat'));
-c = load_stimulus_catalog(root);
+c = flexible_2p('catalog',root);
 oldSync = Screen('Preference','SkipSyncTests',1);
 try
     PsychImaging('PrepareConfiguration');
@@ -27,7 +27,7 @@ end
 for idx = unique(indices)
     g = find(strcmp({c.groups.name},c.items(idx).set_name));
     c.groups(g).enabled = true; c.groups(g).modality = 'V';
-    t = session_trial(c,c.items(idx),'V');
+    t = flexible_2p('trial',c,c.items(idx),'V');
     p.prepare(t);
     if t.media_start_s>0
         assert(abs(p.moviePTS(1)-t.media_start_s)<.1, ...
@@ -68,7 +68,7 @@ end
 fprintf('Verified %d stimuli on both displays, including preview pixels, resizing and RGBA.\n',numel(unique(indices)));
 g = find(strcmp({c.groups.name},'tones')); c.groups(g).enabled = true;
 idx = find(strcmp({c.items.set_name},'tones'),1);
-t = session_trial(c,c.items(idx),'A'); t.audio_file = ''; % Inspect the marker silently.
+t = flexible_2p('trial',c,c.items(idx),'A'); t.audio_file = ''; % Inspect the marker silently.
 for background = {'gray','black','white'}
     t.background = background{1}; p.prepare(t);
     value = 0; if strcmp(t.background,'gray'), value=128; end

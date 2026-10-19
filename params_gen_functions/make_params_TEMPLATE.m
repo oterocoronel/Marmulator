@@ -34,7 +34,7 @@ iti_random = false;
 order = 'random'; % or 'sequential'
 bg_col = 'gray';
 stim_rect_size_x_deg = 10; % moving dots, rectangles, images
-stim_rect_size_y_deg = 10; % Sizes must be multiples of 0.5 degrees.
+stim_rect_size_y_deg = 10; % Sizes are visual degrees.
 
 
 show_curr_bounding_box = true;

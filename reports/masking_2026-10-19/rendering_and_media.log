@@ -1,0 +1,353 @@
+
+
+PTB-INFO: This is Psychtoolbox-3 for GNU/Linux X11, under Matlab 64-Bit (Version 3.0.18 - Build date: Jun 27 2022).
+PTB-INFO: OS support status: Linux 5.15.0-198-generic Supported.
+PTB-INFO: Type 'PsychtoolboxVersion' for more detailed version information.
+PTB-INFO: Most parts of the Psychtoolbox distribution are licensed to you under terms of the MIT License, with
+PTB-INFO: some restrictions. See file 'License.txt' in the Psychtoolbox root folder for the exact licensing conditions.
+
+PTB-INFO: For information about paid support, support memberships and other commercial services, please type
+PTB-INFO: 'PsychPaidSupportAndServices'.
+
+PTB-INFO: Connected to NVidia TU102 [GeForce RTX 2080 Ti Rev. A] GPU of NV-160 family with 4 display heads.
+
+PTB-WARNING: Querying rasterbeam-position doesn't work on your setup! (Returns a constant value 0)
+PTB-WARNING: This can happen if Psychtoolbox gets the mapping of connected displays to graphics card
+PTB-WARNING: outputs wrong. See 'help DisplayOutputMappings' for tips on how to resolve this problem.
+
+
+
+PTB-INFO: OpenGL-Renderer is NVIDIA Corporation :: NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2 :: 4.6.0 NVIDIA 580.178.04
+PTB-INFO: VBL startline = 1600 , VBL Endline = -1
+PTB-INFO: Measured monitor refresh interval from VBLsync = 16.674242 ms [59.972741 Hz]. (50 valid samples taken, stddev=0.035459 ms.)
+PTB-INFO: Reported monitor refresh interval from operating system = 16.674726 ms [59.971001 Hz].
+PTB-INFO: Small deviations between reported values are normal and no reason to worry.
+
+
+----- ! PTB - WARNING: SYNCHRONIZATION TROUBLE ! -----
+
+One or more internal checks (see Warnings above) indicate that
+queries of rasterbeam position are not properly working for your setup.
+
+Psychtoolbox will work around this by using a different timing algorithm, 
+but it will cause Screen('Flip') to report less accurate/robust timestamps
+for stimulus timing.
+Read 'help BeampositionQueries' for more info and troubleshooting tips.
+
+
+PTB-INFO: Proper timing and timestamping of visual stimulus onset is not reliably supported at all on this desktop GUI
+PTB-INFO: when running in windowed mode (non-fullscreen), or for transparent windows. If PTB aborts with
+PTB-INFO: 'Synchronization failure' you can disable the sync test via a call to Screen('Preference', 'SkipSyncTests', 2).
+PTB-INFO: You won't get proper stimulus onset timestamps in any case though, so windowed mode is of limited use.
+PTB-INFO: Using a desktop GUI like GNOME-3 or Ubuntu desktop, which uses the Mutter compositor, may give better timing if
+PTB-INFO: you opt-in into our new experimental(!) support: Call setenv('PSYCH_EXPERIMENTAL_NETWMTS', '1') at start of your script.
+
+PTB-WARNING: Querying rasterbeam-position doesn't work on your setup! (Returns a constant value 0)
+PTB-WARNING: This can happen if Psychtoolbox gets the mapping of connected displays to graphics card
+PTB-WARNING: outputs wrong. See 'help DisplayOutputMappings' for tips on how to resolve this problem.
+
+
+
+PTB-INFO: OpenGL-Renderer is NVIDIA Corporation :: NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2 :: 4.6.0 NVIDIA 580.178.04
+PTB-INFO: VBL startline = 1080 , VBL Endline = -1
+PTB-INFO: Measured monitor refresh interval from VBLsync = 9.998822 ms [100.011779 Hz]. (50 valid samples taken, stddev=0.150260 ms.)
+PTB-INFO: Reported monitor refresh interval from operating system = 10.000000 ms [100.000000 Hz].
+PTB-INFO: Small deviations between reported values are normal and no reason to worry.
+
+
+----- ! PTB - WARNING: SYNCHRONIZATION TROUBLE ! -----
+
+One or more internal checks (see Warnings above) indicate that
+queries of rasterbeam position are not properly working for your setup.
+
+Psychtoolbox will work around this by using a different timing algorithm, 
+but it will cause Screen('Flip') to report less accurate/robust timestamps
+for stimulus timing.
+Read 'help BeampositionQueries' for more info and troubleshooting tips.
+
+
+PREP videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv: first 2.003 s, cached 0.236 s
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 legacy_subject: compute p50/p95 2.512/2.804 ms, late 0/110, long 0
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 session_subject: compute p50/p95 2.550/2.901 ms, late 0/110, long 0
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 session_surround: compute p50/p95 2.598/3.517 ms, late 0/110, long 0
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 session_preview: compute p50/p95 4.407/6.002 ms, late 0/110, long 0
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 session_preview_surround: compute p50/p95 4.679/6.184 ms, late 0/110, long 0
+PREP videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv: first 6.277 s, cached 0.275 s
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 legacy_subject: compute p50/p95 3.139/3.477 ms, late 0/110, long 0
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 session_subject: compute p50/p95 3.182/3.296 ms, late 0/110, long 0
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 session_surround: compute p50/p95 3.204/3.268 ms, late 0/110, long 0
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 session_preview: compute p50/p95 5.104/5.516 ms, late 0/110, long 0
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 session_preview_surround: compute p50/p95 5.486/6.458 ms, late 0/110, long 0
+PREP dots/dots_dir_000.0.avi: first 0.166 s, cached 0.170 s
+dots/dots_dir_000.0.avi rep 1 legacy_subject: compute p50/p95 6.804/8.605 ms, late 0/110, long 0
+dots/dots_dir_000.0.avi rep 1 session_subject: compute p50/p95 6.692/8.502 ms, late 0/110, long 0
+dots/dots_dir_000.0.avi rep 1 session_surround: compute p50/p95 7.081/8.641 ms, late 0/110, long 0
+dots/dots_dir_000.0.avi rep 1 session_preview: compute p50/p95 10.254/12.315 ms, late 0/110, long 0
+dots/dots_dir_000.0.avi rep 1 session_preview_surround: compute p50/p95 10.561/12.523 ms, late 0/110, long 0
+
+
+INFO: PTB's Screen('Flip', 10) command seems to have missed the requested stimulus presentation deadline
+INFO: a total of 17 times out of a total of 1818 flips during this session.
+
+INFO: This number is fairly accurate (and indicative of real timing problems in your own code or your system)
+INFO: if you provided requested stimulus onset times with the 'when' argument of Screen('Flip', window [, when]);
+INFO: If you called Screen('Flip', window); without the 'when' argument, this count is more of a ''mild'' indicator
+INFO: of timing behaviour than a hard reliable measurement. Large numbers may indicate problems and should at least
+INFO: deserve your closer attention. Cfe. 'help SyncTrouble', the FAQ section at www.psychtoolbox.org and the
+INFO: examples in the PDF presentation in PsychDocumentation/Psychtoolbox3-Slides.pdf for more info and timing tips.
+
+
+
+PTB-INFO: This is Psychtoolbox-3 for GNU/Linux X11, under Matlab 64-Bit (Version 3.0.18 - Build date: Jun 27 2022).
+PTB-INFO: OS support status: Linux 5.15.0-198-generic Supported.
+PTB-INFO: Type 'PsychtoolboxVersion' for more detailed version information.
+PTB-INFO: Most parts of the Psychtoolbox distribution are licensed to you under terms of the MIT License, with
+PTB-INFO: some restrictions. See file 'License.txt' in the Psychtoolbox root folder for the exact licensing conditions.
+
+PTB-INFO: For information about paid support, support memberships and other commercial services, please type
+PTB-INFO: 'PsychPaidSupportAndServices'.
+
+PTB-INFO: Connected to NVidia TU102 [GeForce RTX 2080 Ti Rev. A] GPU of NV-160 family with 4 display heads.
+
+PTB-WARNING: Querying rasterbeam-position doesn't work on your setup! (Returns a constant value 0)
+PTB-WARNING: This can happen if Psychtoolbox gets the mapping of connected displays to graphics card
+PTB-WARNING: outputs wrong. See 'help DisplayOutputMappings' for tips on how to resolve this problem.
+
+
+
+PTB-INFO: OpenGL-Renderer is NVIDIA Corporation :: NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2 :: 4.6.0 NVIDIA 580.178.04
+PTB-INFO: VBL startline = 1600 , VBL Endline = -1
+PTB-INFO: Measured monitor refresh interval from VBLsync = 16.674461 ms [59.971952 Hz]. (50 valid samples taken, stddev=0.030760 ms.)
+PTB-INFO: Reported monitor refresh interval from operating system = 16.674726 ms [59.971001 Hz].
+PTB-INFO: Small deviations between reported values are normal and no reason to worry.
+
+
+----- ! PTB - WARNING: SYNCHRONIZATION TROUBLE ! -----
+
+One or more internal checks (see Warnings above) indicate that
+queries of rasterbeam position are not properly working for your setup.
+
+Psychtoolbox will work around this by using a different timing algorithm, 
+but it will cause Screen('Flip') to report less accurate/robust timestamps
+for stimulus timing.
+Read 'help BeampositionQueries' for more info and troubleshooting tips.
+
+
+PTB-INFO: Proper timing and timestamping of visual stimulus onset is not reliably supported at all on this desktop GUI
+PTB-INFO: when running in windowed mode (non-fullscreen), or for transparent windows. If PTB aborts with
+PTB-INFO: 'Synchronization failure' you can disable the sync test via a call to Screen('Preference', 'SkipSyncTests', 2).
+PTB-INFO: You won't get proper stimulus onset timestamps in any case though, so windowed mode is of limited use.
+PTB-INFO: Using a desktop GUI like GNOME-3 or Ubuntu desktop, which uses the Mutter compositor, may give better timing if
+PTB-INFO: you opt-in into our new experimental(!) support: Call setenv('PSYCH_EXPERIMENTAL_NETWMTS', '1') at start of your script.
+
+PTB-WARNING: Querying rasterbeam-position doesn't work on your setup! (Returns a constant value 0)
+PTB-WARNING: This can happen if Psychtoolbox gets the mapping of connected displays to graphics card
+PTB-WARNING: outputs wrong. See 'help DisplayOutputMappings' for tips on how to resolve this problem.
+
+
+
+PTB-INFO: OpenGL-Renderer is NVIDIA Corporation :: NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2 :: 4.6.0 NVIDIA 580.178.04
+PTB-INFO: VBL startline = 1080 , VBL Endline = -1
+PTB-INFO: Measured monitor refresh interval from VBLsync = 9.999962 ms [100.000381 Hz]. (50 valid samples taken, stddev=0.151355 ms.)
+PTB-INFO: Reported monitor refresh interval from operating system = 10.000000 ms [100.000000 Hz].
+PTB-INFO: Small deviations between reported values are normal and no reason to worry.
+
+
+----- ! PTB - WARNING: SYNCHRONIZATION TROUBLE ! -----
+
+One or more internal checks (see Warnings above) indicate that
+queries of rasterbeam position are not properly working for your setup.
+
+Psychtoolbox will work around this by using a different timing algorithm, 
+but it will cause Screen('Flip') to report less accurate/robust timestamps
+for stimulus timing.
+Read 'help BeampositionQueries' for more info and troubleshooting tips.
+
+
+PREP videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv: first 1.865 s, cached 0.222 s
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 legacy_subject: compute p50/p95 2.527/2.736 ms, late 0/110, long 0
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 session_subject: compute p50/p95 2.560/4.445 ms, late 0/110, long 0
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 session_surround: compute p50/p95 2.575/2.957 ms, late 0/110, long 0
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 session_preview: compute p50/p95 8.483/11.027 ms, late 0/110, long 0
+videos_AV/vocalization_phee/id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba.mkv rep 1 session_preview_surround: compute p50/p95 8.560/11.545 ms, late 0/110, long 0
+PREP videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv: first 7.354 s, cached 0.277 s
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 legacy_subject: compute p50/p95 3.151/4.192 ms, late 0/110, long 0
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 session_subject: compute p50/p95 3.209/3.337 ms, late 0/110, long 0
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 session_surround: compute p50/p95 3.236/3.950 ms, late 0/110, long 0
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 session_preview: compute p50/p95 9.543/12.550 ms, late 0/110, long 0
+videos_V/arena_exported_5set/rgba/id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba.mkv rep 1 session_preview_surround: compute p50/p95 8.963/12.464 ms, late 0/110, long 0
+PREP dots/dots_dir_000.0.avi: first 0.162 s, cached 0.173 s
+dots/dots_dir_000.0.avi rep 1 legacy_subject: compute p50/p95 6.692/8.493 ms, late 0/110, long 0
+dots/dots_dir_000.0.avi rep 1 session_subject: compute p50/p95 8.098/9.660 ms, late 0/110, long 0
+dots/dots_dir_000.0.avi rep 1 session_surround: compute p50/p95 8.073/9.149 ms, late 0/110, long 0
+PTB-INFO: Movie playback had to drop 26 frames of movie 0 to keep playback in sync.
+dots/dots_dir_000.0.avi rep 1 session_preview: compute p50/p95 14.096/16.143 ms, late 22/110, long 22
+PTB-INFO: Movie playback had to drop 24 frames of movie 0 to keep playback in sync.
+dots/dots_dir_000.0.avi rep 1 session_preview_surround: compute p50/p95 14.315/16.085 ms, late 26/110, long 26
+
+
+INFO: PTB's Screen('Flip', 10) command seems to have missed the requested stimulus presentation deadline
+INFO: a total of 70 times out of a total of 1818 flips during this session.
+
+INFO: This number is fairly accurate (and indicative of real timing problems in your own code or your system)
+INFO: if you provided requested stimulus onset times with the 'when' argument of Screen('Flip', window [, when]);
+INFO: If you called Screen('Flip', window); without the 'when' argument, this count is more of a ''mild'' indicator
+INFO: of timing behaviour than a hard reliable measurement. Large numbers may indicate problems and should at least
+INFO: deserve your closer attention. Cfe. 'help SyncTrouble', the FAQ section at www.psychtoolbox.org and the
+INFO: examples in the PDF presentation in PsychDocumentation/Psychtoolbox3-Slides.pdf for more info and timing tips.
+
+                comparisons: 18
+                  identical: 1
+                  mask_size: [786 786 4]
+                 mask_bytes: 2471184
+         mask_generation_ms: 20.5028
+         foreground_1292_ms: 0.9868
+           old_eye_parse_ms: 0.2336
+           new_eye_parse_ms: 0.0032
+    new_recording_packet_ms: 0.0156
+
+
+
+PTB-INFO: This is Psychtoolbox-3 for GNU/Linux X11, under Matlab 64-Bit (Version 3.0.18 - Build date: Jun 27 2022).
+PTB-INFO: OS support status: Linux 5.15.0-198-generic Supported.
+PTB-INFO: Type 'PsychtoolboxVersion' for more detailed version information.
+PTB-INFO: Most parts of the Psychtoolbox distribution are licensed to you under terms of the MIT License, with
+PTB-INFO: some restrictions. See file 'License.txt' in the Psychtoolbox root folder for the exact licensing conditions.
+
+PTB-INFO: For information about paid support, support memberships and other commercial services, please type
+PTB-INFO: 'PsychPaidSupportAndServices'.
+
+PTB-INFO: Connected to NVidia TU102 [GeForce RTX 2080 Ti Rev. A] GPU of NV-160 family with 4 display heads.
+PTB-INFO: Proper timing and timestamping of visual stimulus onset is not reliably supported at all on this desktop GUI
+PTB-INFO: when running in windowed mode (non-fullscreen), or for transparent windows. If PTB aborts with
+PTB-INFO: 'Synchronization failure' you can disable the sync test via a call to Screen('Preference', 'SkipSyncTests', 2).
+PTB-INFO: You won't get proper stimulus onset timestamps in any case though, so windowed mode is of limited use.
+PTB-INFO: Using a desktop GUI like GNOME-3 or Ubuntu desktop, which uses the Mutter compositor, may give better timing if
+PTB-INFO: you opt-in into our new experimental(!) support: Call setenv('PSYCH_EXPERIMENTAL_NETWMTS', '1') at start of your script.
+
+PTB-WARNING: Querying rasterbeam-position doesn't work on your setup! (Returns a constant value 0)
+PTB-WARNING: This can happen if Psychtoolbox gets the mapping of connected displays to graphics card
+PTB-WARNING: outputs wrong. See 'help DisplayOutputMappings' for tips on how to resolve this problem.
+
+
+
+PTB-INFO: OpenGL-Renderer is NVIDIA Corporation :: NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2 :: 4.6.0 NVIDIA 580.178.04
+PTB-INFO: VBL startline = 1600 , VBL Endline = -1
+PTB-INFO: Measured monitor refresh interval from VBLsync = 16.674280 ms [59.972604 Hz]. (50 valid samples taken, stddev=0.049890 ms.)
+PTB-INFO: Reported monitor refresh interval from operating system = 16.674726 ms [59.971001 Hz].
+PTB-INFO: Small deviations between reported values are normal and no reason to worry.
+
+
+----- ! PTB - WARNING: SYNCHRONIZATION TROUBLE ! -----
+
+One or more internal checks (see Warnings above) indicate that
+queries of rasterbeam position are not properly working for your setup.
+
+Psychtoolbox will work around this by using a different timing algorithm, 
+but it will cause Screen('Flip') to report less accurate/robust timestamps
+for stimulus timing.
+Read 'help BeampositionQueries' for more info and troubleshooting tips.
+
+
+PTB-INFO: Proper timing and timestamping of visual stimulus onset is not reliably supported at all on this desktop GUI
+PTB-INFO: when running in windowed mode (non-fullscreen), or for transparent windows. If PTB aborts with
+PTB-INFO: 'Synchronization failure' you can disable the sync test via a call to Screen('Preference', 'SkipSyncTests', 2).
+PTB-INFO: You won't get proper stimulus onset timestamps in any case though, so windowed mode is of limited use.
+PTB-INFO: Using a desktop GUI like GNOME-3 or Ubuntu desktop, which uses the Mutter compositor, may give better timing if
+PTB-INFO: you opt-in into our new experimental(!) support: Call setenv('PSYCH_EXPERIMENTAL_NETWMTS', '1') at start of your script.
+
+PTB-WARNING: Querying rasterbeam-position doesn't work on your setup! (Returns a constant value 0)
+PTB-WARNING: This can happen if Psychtoolbox gets the mapping of connected displays to graphics card
+PTB-WARNING: outputs wrong. See 'help DisplayOutputMappings' for tips on how to resolve this problem.
+
+
+
+PTB-INFO: OpenGL-Renderer is NVIDIA Corporation :: NVIDIA GeForce RTX 2080 Ti/PCIe/SSE2 :: 4.6.0 NVIDIA 580.178.04
+PTB-INFO: VBL startline = 1080 , VBL Endline = -1
+PTB-INFO: Measured monitor refresh interval from VBLsync = 9.999843 ms [100.001574 Hz]. (50 valid samples taken, stddev=0.016193 ms.)
+PTB-INFO: Reported monitor refresh interval from operating system = 10.000000 ms [100.000000 Hz].
+PTB-INFO: Small deviations between reported values are normal and no reason to worry.
+
+
+----- ! PTB - WARNING: SYNCHRONIZATION TROUBLE ! -----
+
+One or more internal checks (see Warnings above) indicate that
+queries of rasterbeam position are not properly working for your setup.
+
+Psychtoolbox will work around this by using a different timing algorithm, 
+but it will cause Screen('Flip') to report less accurate/robust timestamps
+for stimulus timing.
+Read 'help BeampositionQueries' for more info and troubleshooting tips.
+
+
+PASS media id-donut_rec-don20260508d161405t_a-grasping_c-1_f-032218_nf-200_fps-40_RGBA_sourcecolor_refinedmask
+PASS media Donut_head_0deg_resting_f-001801_RGBA_sourcecolor_refinedmask
+PASS media Donut_head_+22.5deg_resting_f-001801_RGBA_sourcecolor_refinedmask
+PASS media AirFilter_RGBA_bg-original_refined
+PTB-INFO: Movie playback had to drop 1 frames of movie 0 to keep playback in sync.
+PASS media id-donut_rec-don20260618d153723t_a-vocal_c-4_f-034157_nf-072_fps-40.4_rgba
+PASS media id-eclair_rec-ecl20260624d164534t_a-vocal_c-4_f-020065_nf-080_fps-40.4_rgba
+PASS media id-goya_rec-goy20260623d155341t_a-vocal_c-4_f-000149_nf-081_fps-40.9_rgba
+PASS media id-mooncake_rec-moo20260618d135950t_a-vocal_c-5_f-012211_nf-080_fps-40.8_rgba
+PASS media id-muffin_rec-muf20260618d130000t_a-vocal_c-5_f-021513_nf-097_fps-40.6_rgba
+PASS media id-muffin_rec-muf20260624d154154t_a-vocal_c-4_f-027697_nf-097_fps-40.6_rgba
+PASS media id-donut_rec-don20260618d153723t_a-vocal_c-5_f-017867_nf-047_fps-40.9_rgba
+PASS media id-eclair_rec-ecl20260618d161751t_a-vocal_c-3_f-016611_nf-045_fps-40.9_rgba
+PASS media id-goya_rec-goy20260621d152229t_a-vocal_c-5_f-003280_nf-046_fps-41.4_rgba
+PASS media id-mooncake_rec-moo20260624d161236t_a-vocal_c-1_f-020627_nf-052_fps-40.9_rgba
+PASS media id-mooncake_rec-moo20260624d161236t_a-vocal_c-4_f-006123_nf-053_fps-41.1_rgba
+PASS media id-muffin_rec-muf20260624d160108t_a-vocal_c-3_f-001483_nf-016_fps-14.3_rgba
+PASS media id-donut&eclair_rec-donecl20260430d161518t_a-aversive_c-1_f-016017_nf-200_fps-40_rgba
+PASS media id-donut&eclair_rec-donecl20260430d161518t_a-grasping_c-4_f-028151_nf-200_fps-40_rgba
+PASS media id-donut&eclair_rec-donecl20260430d161518t_a-grooming_c-2_f-006482_nf-200_fps-40_rgba
+PASS media id-donut&eclair_rec-donecl20260430d161518t_a-relaxed_c-4_f-032758_nf-200_fps-40_rgba
+PASS media id-donut&eclair_rec-donecl20260430d161518t_a-stance_c-3_f-000186_nf-200_fps-40_rgba
+PASS media id-donut&eclair_rec-donecl20260508d165140t_a-cuddling_c-1_f-027572_nf-200_fps-40_rgba
+PASS media id-donut&eclair_rec-donecl20260508d165140t_a-eating_c-3_f-034180_nf-200_fps-40_rgba
+PASS media id-donut&eclair_rec-donecl20260508d165140t_a-headcock_c-1_f-007973_nf-200_fps-40_rgba
+PASS media id-donut&eclair_rec-donecl20260612d175940t_a-sleeping_c-1_f-041700_nf-200_fps-40_rgba
+PTB-INFO: Movie playback had to drop 2 frames of movie 0 to keep playback in sync.
+PASS media dots_dir_000.0
+PTB-INFO: Movie playback had to drop 4 frames of movie 0 to keep playback in sync.
+PASS media gratings_dir_000.0
+Verified 27 stimuli on both displays, including preview pixels, resizing and RGBA.
+PASS A-only fixation marker on gray
+PASS A-only fixation marker on black
+PASS A-only fixation marker on white
+
+
+INFO: PTB's Screen('Flip', 11) command seems to have missed the requested stimulus presentation deadline
+INFO: a total of 8 times out of a total of 141 flips during this session.
+
+INFO: This number is fairly accurate (and indicative of real timing problems in your own code or your system)
+INFO: if you provided requested stimulus onset times with the 'when' argument of Screen('Flip', window [, when]);
+INFO: If you called Screen('Flip', window); without the 'when' argument, this count is more of a ''mild'' indicator
+INFO: of timing behaviour than a hard reliable measurement. Large numbers may indicate problems and should at least
+INFO: deserve your closer attention. Cfe. 'help SyncTrouble', the FAQ section at www.psychtoolbox.org and the
+INFO: examples in the PDF presentation in PsychDocumentation/Psychtoolbox3-Slides.pdf for more info and timing tips.
+
+
+
+WARNING: This session of your experiment was run by you with the setting Screen('Preference', 'SkipSyncTests', 1).
+WARNING: This means that some internal self-tests and calibrations were skipped. Your stimulus presentation timing
+WARNING: may have been wrong. This is fine for development and debugging of your experiment, but for running the real
+WARNING: study, please make sure to set Screen('Preference', 'SkipSyncTests', 0) for maximum accuracy and reliability.
+
+
+INFO: PTB's Screen('Flip', 10) command seems to have missed the requested stimulus presentation deadline
+INFO: a total of 4 times out of a total of 141 flips during this session.
+
+INFO: This number is fairly accurate (and indicative of real timing problems in your own code or your system)
+INFO: if you provided requested stimulus onset times with the 'when' argument of Screen('Flip', window [, when]);
+INFO: If you called Screen('Flip', window); without the 'when' argument, this count is more of a ''mild'' indicator
+INFO: of timing behaviour than a hard reliable measurement. Large numbers may indicate problems and should at least
+INFO: deserve your closer attention. Cfe. 'help SyncTrouble', the FAQ section at www.psychtoolbox.org and the
+INFO: examples in the PDF presentation in PsychDocumentation/Psychtoolbox3-Slides.pdf for more info and timing tips.
+
+
+
+WARNING: This session of your experiment was run by you with the setting Screen('Preference', 'SkipSyncTests', 1).
+WARNING: This means that some internal self-tests and calibrations were skipped. Your stimulus presentation timing
+WARNING: may have been wrong. This is fine for development and debugging of your experiment, but for running the real
+WARNING: study, please make sure to set Screen('Preference', 'SkipSyncTests', 0) for maximum accuracy and reliability.
+eyetracker deleted

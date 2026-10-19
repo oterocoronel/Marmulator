@@ -61,7 +61,7 @@ classdef SessionStimulusPlayer < handle
                     obj.visualSize = [size(rgb,2) size(rgb,1)];
                     obj.sourceRect = [0 0 obj.visualSize];
                     if ~isempty(alpha)
-                        foregroundRect = session_foreground_rect(alpha);
+                        foregroundRect = flexible_2p('foreground',alpha);
                         if ~isempty(foregroundRect), obj.sourceRect = foregroundRect; end
                     end
                     obj.visualSize = obj.sourceRect(3:4)-obj.sourceRect(1:2);
@@ -70,7 +70,7 @@ classdef SessionStimulusPlayer < handle
                 end
             end
             if ~isempty(trial.audio_file)
-                samples = session_audio_samples(trial,obj.sampleRate);
+                samples = flexible_2p('audio',trial,obj.sampleRate);
                 PsychPortAudio('FillBuffer',obj.audio,samples');
             end
         end
@@ -145,7 +145,7 @@ classdef SessionStimulusPlayer < handle
             if isKey(obj.movieCropCache,path)
                 cached = obj.movieCropCache(path);
                 if cached.bytes==info.bytes && cached.datenum==info.datenum
-                    [rect,meanSize] = session_movie_geometry( ...
+                    [rect,meanSize] = flexible_2p('movie_geometry', ...
                         cached.rects,cached.pts,startTime,duration,fullRect);
                     return
                 end
@@ -162,7 +162,7 @@ classdef SessionStimulusPlayer < handle
                     'Decoder discarded alpha in %s. Install GStreamer VP9 alpha support before running.',path);
                 alpha = rgba(:,:,4);
                 hasTransparency = hasTransparency || any(alpha(:)<255);
-                frameRect = session_foreground_rect(alpha);
+                frameRect = flexible_2p('foreground',alpha);
                 if isempty(frameRect), frameRect = [0 0 0 0]; end
                 rects(end+1,:) = frameRect; %#ok<AGROW>
                 pts(end+1,1) = frameTime; %#ok<AGROW>
@@ -173,7 +173,7 @@ classdef SessionStimulusPlayer < handle
                 'Decoder discarded alpha in %s. Install GStreamer VP9 alpha support before running.',path);
             obj.movieCropCache(path) = struct('bytes',info.bytes,'datenum',info.datenum, ...
                 'rects',rects,'pts',pts);
-            [rect,meanSize] = session_movie_geometry(rects,pts,startTime,duration,fullRect);
+            [rect,meanSize] = flexible_2p('movie_geometry',rects,pts,startTime,duration,fullRect);
         end
         function copyRect = updatePreview(obj,ctrlWin,rect)
             % Separate X screens need textures created in their own GL context.
