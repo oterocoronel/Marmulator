@@ -206,6 +206,18 @@ trial_mode = s.trial_mode;
 reward_on = s.reward_on;
 location_require_quality = s.location_require_quality;
 stim_mode = s.stim_mode;
+progress_dot = strcmp(stim_mode, 'progress_dot');
+dot_unlock_progress = 0.25; % Keep the unlocked dot visible against a gray background.
+if progress_dot
+    assert(strcmp(trial_mode, 'foraging') && strcmp(reward_on, 'location') && ...
+        require_fix_tr_init && s.stimulus_pre_dot && n_rsvp == 1 && ...
+        ~s.pulse_size, 'Marmulator:ProgressDotMode', ...
+        'Progress dots require fixation initiation, location foraging, one stimulus and no size pulsing.');
+    validateattributes(fixation_to_init, {'numeric'}, {'scalar','finite','positive'});
+    validateattributes(time_to_reward, {'numeric'}, {'scalar','finite','positive'});
+    validateattributes(time_out_after, {'numeric'}, {'scalar','finite','positive'});
+    validateattributes(s.reward_thresh, {'numeric'}, {'scalar','>=',0,'<=',1});
+end
 img_folder = s.img_folder;
 pulse_size = s.pulse_size;
 movie_folder = s.movie_folder;
@@ -761,6 +773,14 @@ if black_surround
         Screen('FillRect', win_ctrl, bg_col_val);
         flipControlWindow([]);
     end
+end
+
+% Keep the background displayed until acquisition starts, before any trial.
+if wait_for_2p_trig && ~waitFor2pTrigger('session start')
+    eyetrack = [];
+    calib = struct('n_pts_x',n_pts_x,'n_pts_y',n_pts_y,'n_completed',0);
+    save_full = [];
+    return
 end
 
 %% TRIGGER: turn on session trigger
@@ -1463,6 +1483,10 @@ session_fixation_scores = nan(1,n_trs_tot);
 session_audio_start = nan(1,n_trs_tot);
 session_movie_pts = cell(1,n_trs_tot);
 session_skipped = false(1,n_trs_tot);
+if progress_dot
+    dot_fixation_fraction = nan(1,n_trs_tot);
+    dot_fixation_duration_s = nan(1,n_trs_tot);
+end
 surround_centers = nan(n_trs_tot,2);
 reward_trial = false(1,n_trs_tot); % for recording whether reward was administered
 correct_trial = false(1,n_trs_tot); % for recording whether a trial was correct - not necesssarily same as reward_trial if using stop_rewards_n_nolicks
@@ -1561,11 +1585,15 @@ for i = 1:n_trs_tot
     % set variables for each trial
     curr_tr = i;
     seqidx = tr_seq(i);
+    dot_trial = progress_dot && seqidx ~= 0; % Wake-up photos keep their usual timing/reward.
     stfridx = 0;
     rsvpfridx = 0;
     rsvp_ctr = 1; 
     interrsvpfridx = 0;
     loop_brk_ctr = 0;
+    dot_inside_s = 0; % Measured fixation time after unlock, excluding initiation.
+    dot_previous_inside = false;
+    dot_display_inside_s = 0;
     punish_loop_brk_ctr = 0; 
     pre_stim_timer = 0;
     manual_reward_flag = false; % has a manual reward been given on the trial yet?
@@ -1687,7 +1715,11 @@ for i = 1:n_trs_tot
             checkLick();
             
             if seqidx ~= 0
-                if draw_crosshairs
+                if progress_dot
+                    % White -> light gray during acquisition; retain progress on misses.
+                    drawProgressDot(dot_unlock_progress*fix_pre_fr_ctr/ ...
+                        max(1,round(fixation_to_init/1e3/ifi)));
+                elseif draw_crosshairs
                     drawCrosshairs(all_pts(seqidx,:));
                 else
                     if ctrl_screen; Screen('DrawDots', win_ctrl, all_pts(seqidx,:)*shrink_factor, stim_pre_dot_sz*shrink_factor, whitecol, [], 1); end
@@ -1782,7 +1814,14 @@ for i = 1:n_trs_tot
                     qual_check = true;
                 end
                 
-                if curr_in_bb  && qual_check
+                if progress_dot
+                    % Accumulate fixation rather than restarting after each excursion.
+                    fix_pre_fr_ctr = fix_pre_fr_ctr + double(curr_in_bb && qual_check);
+                    if fix_pre_fr_ctr == 3 && clip_ctr == 1
+                        calib_t_clip(i,clip_ctr) = GetSecs() - t_start_sec;
+                        clip_ctr = clip_ctr + 1;
+                    end
+                elseif curr_in_bb  && qual_check
                     fix_pre_fr_ctr = fix_pre_fr_ctr + 1;
                     blink_ctr = 0;
                     
@@ -1811,34 +1850,11 @@ for i = 1:n_trs_tot
         stim_pre_end(i) = GetSecs() - t_start_sec;
     end
 
-    if wait_for_2p_trig && ~trial_init_timed_out(i)
-        % enter wait loop
-        % read pin state
-        fprintf('waiting for 2p trigger on pin %d...\n', trigger_arduino.trig_2p_read_pin);
-        IOPort('Flush', trig_hand);
-        t_wait_start = GetSecs();
-        prev_2p = check2pTrig();
-        while true
-            curr_2p = check2pTrig();
-            if prev_2p == 0 && curr_2p == 1
-                fprintf('2p trigger received after %0.4f s\n', GetSecs() - t_wait_start);
-                break
-            end
-            prev_2p = curr_2p;
-            [~, ~, kCode] = KbCheck();
-            if kCode(esc_key)
-                fprintf('wait aborted by user\n');
-                exit_flag = true; trial_aborted(i) = true;
-                break
-            end
-            % if GetSecs() - t_wait_start > wait_2p_timeout_s
-            %     fprintf('2p trigger timed out after %g s\n', wait_2p_timeout_s);
-            %     break
-            % end
+    if wait_for_2p_trig && ~trial_init_timed_out(i) && ~exit_flag
+        if ~waitFor2pTrigger('stimulus')
+            exit_flag = true;
+            trial_aborted(i) = true;
         end
-
-        fprintf('PROCEED!\n')
-        
     end
     
     if strcmp(stim_mode, 'moving_dot')
@@ -1944,6 +1960,11 @@ for i = 1:n_trs_tot
             end
             
             eye_in_bb_curr(stfridx) = curr_in_bb;
+            if dot_trial
+                % Invalid gaze/quality counts as outside in both reward requirements.
+                eye_in_bb_curr(stfridx) = curr_in_bb && ...
+                    (~location_require_quality || eyetracker_qual(idx_all) < 2);
+            end
             
             if draw_retain_bb_pts
                 drawGoodEyePts(1);
@@ -1952,6 +1973,13 @@ for i = 1:n_trs_tot
             if seqidx ~= 0  && ~inter_rsvp
                 %% RUN: STIM MODE SWITCH FOR DRAWING
                 switch stim_mode
+                    case 'progress_dot'
+                        % Continue light gray -> black at the same position and size.
+                        % Include the pending intervals so the last hold frame is black.
+                        dot_display_inside_s = max(dot_display_inside_s, dot_inside_s + ...
+                            ifi*(dot_previous_inside + eye_in_bb_curr(stfridx)));
+                        drawProgressDot(dot_unlock_progress + (1-dot_unlock_progress)* ...
+                            dot_display_inside_s/(time_to_reward/1e3));
                     case 'session'
                         if stfridx == 1
                             session_player.start(vbl+ifi);
@@ -2175,7 +2203,7 @@ for i = 1:n_trs_tot
                 end
                 
                 
-                if stimulus_pre_dot && ~stimulus_pre_dot_disappear
+                if stimulus_pre_dot && ~stimulus_pre_dot_disappear && ~progress_dot
                     if ~m2s_mode || (m2s_mode && rsvp_ctr == 1)
                         if draw_crosshairs 
                             drawCrosshairs(all_pts(seqidx,:));  
@@ -2246,7 +2274,8 @@ for i = 1:n_trs_tot
             
             checkLick();
             
-            if strcmp(reward_on, 'location')
+            % Progress dots use cumulative measured time below, not the hold counter.
+            if strcmp(reward_on, 'location') && ~dot_trial
                 if location_require_quality
                     qual_check = eyetracker_qual(idx_all)<2;
                 else
@@ -2334,6 +2363,13 @@ for i = 1:n_trs_tot
                     trial_trig_hi = 1;
                 end
             end
+            if dot_trial
+                % Charge each displayed interval to the gaze sampled for that frame.
+                if stfridx > 1
+                    dot_inside_s = dot_inside_s + (vbl-vbl_old)*dot_previous_inside;
+                end
+                dot_previous_inside = eye_in_bb_curr(stfridx) == 1;
+            end
             
             if n_rsvp>1 && rsvpfridx == 1 
                 rsvp_start_t(rsvp_ctr, i) = vbl-t_start_sec; 
@@ -2379,6 +2415,13 @@ for i = 1:n_trs_tot
         % check if we need to end
         if trial_init_timed_out(i)
             end_stim = 1;
+        elseif dot_trial
+            % Include the final scheduled frame; the off flip confirms its duration.
+            dot_elapsed_s = vbl-t_start_sec-calib_st_t(i)+ifi;
+            dot_fixation_s = dot_inside_s + ifi*dot_previous_inside;
+            dot_reward_ready = dot_fixation_s + 1e-9 >= time_to_reward/1e3 && ...
+                dot_fixation_s/dot_elapsed_s + 1e-9 >= reward_thresh;
+            end_stim = dot_reward_ready || dot_elapsed_s + 1e-9 >= time_out_after/1e3;
         elseif session_mode
             end_stim = (vbl-t_start_sec-calib_st_t(i)+ifi) >= stim_frames*ifi-ifi*0.1;
         elseif strcmp(trial_mode, 'trial') || seqidx == 0
@@ -2482,6 +2525,14 @@ for i = 1:n_trs_tot
             % if ending, note the time:
             %calib_end_t(i) = GetSecs()-t_start_sec;
             calib_end_t(i) = vbl - t_start_sec;
+            if dot_trial
+                dot_fixation_fraction(i) = session_fixation_fraction( ...
+                    frame_st_t,eye_in_bb_curr(1:numel(frame_st_t)),calib_end_t(i));
+                dot_fixation_duration_s(i) = dot_fixation_fraction(i)* ...
+                    (calib_end_t(i)-calib_st_t(i));
+                correct_trial(i) = dot_fixation_duration_s(i) + 1e-9 >= time_to_reward/1e3 && ...
+                    dot_fixation_fraction(i) + 1e-9 >= reward_thresh;
+            end
             if session_mode
                 session_fixation_scores(i) = session_fixation_fraction( ...
                     frame_st_t,eye_in_bb_curr(1:numel(frame_st_t)),calib_end_t(i));
@@ -2504,7 +2555,7 @@ for i = 1:n_trs_tot
             end
             
             if give_rewards && ~skip_reward
-                if session_mode
+                if dot_trial || session_mode
                     reward_this_trial = correct_trial(i);
                 elseif strcmp(trial_mode, 'trial') || seqidx == 0
                     if strcmp(reward_on, 'quality') || (seqidx == 0 && ~eye_method_mouse)
@@ -2664,10 +2715,10 @@ for i = 1:n_trs_tot
     end
 
 
-    if session_mode && trig_flag && trial_init_timed_out(i)
+    if (session_mode || progress_dot) && trig_flag && trial_init_timed_out(i)
         IOPort('Write',trig_hand,trial_trig_cmd.off,1);
     end
-    if session_mode && trig_flag && sampleCommand_trig_hi && ~isempty(sampleCommand_trig_cmd)
+    if (session_mode || progress_dot) && trig_flag && sampleCommand_trig_hi && ~isempty(sampleCommand_trig_cmd)
         IOPort('Write',trig_hand,sampleCommand_trig_cmd.off,1);
         sampleCommand_trig_hi = 0;
     end
@@ -2756,6 +2807,10 @@ if profile_memory
 end
 
 %% SAVE: gather data for save into structures
+if progress_dot
+    calib.fixation_fraction = dot_fixation_fraction;
+    calib.fixation_duration_s = dot_fixation_duration_s;
+end
 if session_mode
     calib.session_trials = session_effective_trials;
     calib.fixation_fraction = session_fixation_scores;
@@ -2767,7 +2822,7 @@ end
 calib.n_pts_x = n_pts_x;
 calib.n_pts_y = n_pts_y;
 calib.trs_per_location = trs_per_location;
-if session_mode
+if session_mode || progress_dot
     calib.n_completed = sum(~isnan(calib_end_t) & ~trial_init_timed_out & ~trial_aborted & ~session_skipped);
 elseif any(trial_aborted)
     calib.n_completed = find(trial_aborted) - 1;
@@ -3080,6 +3135,16 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
         flip_time = Screen('Flip', win_ctrl, varargin{:});
     end
 
+    function drawProgressDot(progress)
+        % One steady, fixed-size dot on both displays; no textures or size pulses.
+        color = whitecol + (blackcol-whitecol)*min(1,max(0,progress));
+        Screen('DrawDots', win, [xcurr ycurr], stim_pre_dot_sz, color, [], 1);
+        if ctrl_screen
+            Screen('DrawDots', win_ctrl, [xcurr ycurr]*shrink_factor, ...
+                stim_pre_dot_sz*shrink_factor, color, [], 1);
+        end
+    end
+
     function [eyeposx_cur, eyeposy_cur, eye_data_qual] = get_eyetracker_draw_dots()
         switch eye_method
             % case 'pupil-glint'
@@ -3313,6 +3378,31 @@ logData_bysession(log_dir,fullfile(save_data_dir, savefname));
                     rew_trs_since_lick = 0;
                 end
                 
+            end
+        end
+    end
+
+    function received = waitFor2pTrigger(phase)
+        % The same pin polling/low-to-high detection for startup and each trial.
+        % No timeout: absent frame pulses keep this phase waiting until Escape.
+        fprintf('Waiting for 2p trigger on pin %d before %s...\n', ...
+            trigger_arduino.trig_2p_read_pin, phase);
+        IOPort('Flush', trig_hand);
+        t_wait_start = GetSecs();
+        prev_2p = check2pTrig();
+        received = false;
+        while true
+            curr_2p = check2pTrig();
+            if prev_2p == 0 && curr_2p == 1
+                received = true;
+                fprintf('2p trigger received after %0.4f s\n', GetSecs()-t_wait_start);
+                return
+            end
+            prev_2p = curr_2p;
+            [~, ~, kCode] = KbCheck();
+            if kCode(esc_key)
+                fprintf('Wait aborted by user\n');
+                return
             end
         end
     end

@@ -7,6 +7,3 @@ gui/pump_params.mat
 /tests
 *.asv
 *.md
-
-# Keep the session setup and stimulus audit in version control.
-!STIMULUS_SESSIONS.md
